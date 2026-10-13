@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Contrats du Middleware CPQ fournis par l'éditeur (.NET Framework 4.7.2, chargés via la couche de compatibilité). -->
+    <Reference Include="SmartDataExchangeDefines">
+      <HintPath>..\..\lib\SmartDataExchangeDefines.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,24 @@
+{
+  "cas": "Langue : aucune langue choisie",
+  "source": "Configurateur.CreeRequete : code_langue reste string.Empty si aucune langue (l.59, l.78)",
+  "entree": {
+    "profil": { "identifiant": "cfgAxDelBrece@techform.fr", "motDePasse": "***", "modeErp": true },
+    "environnement": { "serveur": "test.cfgroup.smartconfigurator.fr" },
+    "action": "Creation",
+    "typeDocument": "Devis",
+    "configurateur": { "nom": "Volet", "productionSite": "DEL_BRECE" },
+    "codeClient": "102466"
+  },
+  "requeteAttendue": {
+    "Login": "cfgAxDelBrece@techform.fr",
+    "Password": "***",
+    "TypeAppel": 0,
+    "TypeTransaction": 0,
+    "ConfiguratorName": "Volet",
+    "AccountId": "102466",
+    "Language": "",
+    "ProductionSite": "DEL_BRECE",
+    "ApplicationUrl": "https://test.cfgroup.smartconfigurator.fr/Cfg_Middleware",
+    "ProjectRef": "AfficherBoutonPresenter"
+  }
+}

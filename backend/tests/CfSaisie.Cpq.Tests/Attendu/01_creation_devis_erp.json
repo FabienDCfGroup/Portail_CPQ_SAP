@@ -1,0 +1,25 @@
+{
+  "cas": "Création d'un devis, profil ERP",
+  "source": "Configurateur.CreeRequete : Creation (l.25-30), Quote (l.47), langue (l.58-78), mode ERP (l.91-98), ProjectRef (l.113)",
+  "entree": {
+    "profil": { "identifiant": "cfgAxDelBrece@techform.fr", "motDePasse": "***", "modeErp": true },
+    "environnement": { "serveur": "test.cfgroup.smartconfigurator.fr" },
+    "action": "Creation",
+    "typeDocument": "Devis",
+    "configurateur": { "nom": "Volet", "productionSite": "DEL_BRECE" },
+    "codeClient": "102466",
+    "langue": "Francais"
+  },
+  "requeteAttendue": {
+    "Login": "cfgAxDelBrece@techform.fr",
+    "Password": "***",
+    "TypeAppel": 0,
+    "TypeTransaction": 0,
+    "ConfiguratorName": "Volet",
+    "AccountId": "102466",
+    "Language": "FR",
+    "ProductionSite": "DEL_BRECE",
+    "ApplicationUrl": "https://test.cfgroup.smartconfigurator.fr/Cfg_Middleware",
+    "ProjectRef": "AfficherBoutonPresenter"
+  }
+}

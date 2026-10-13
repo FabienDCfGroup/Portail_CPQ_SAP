@@ -1,0 +1,25 @@
+{
+  "cas": "Configurateur sans site de production paramétré : DEL_BRECE par défaut",
+  "source": "Configurateur.CreeRequete : ProductionSite = 'DEL_BRECE' (l.22). Dans le portail, le site est paramétré par configurateur en BDD ; à défaut, DEL_BRECE (décision projet).",
+  "entree": {
+    "profil": { "identifiant": "cfgAxDelBrece@techform.fr", "motDePasse": "***", "modeErp": true },
+    "environnement": { "serveur": "test.cfgroup.smartconfigurator.fr" },
+    "action": "Creation",
+    "typeDocument": "Devis",
+    "configurateur": { "nom": "Volet", "productionSite": null },
+    "codeClient": "102466",
+    "langue": "Francais"
+  },
+  "requeteAttendue": {
+    "Login": "cfgAxDelBrece@techform.fr",
+    "Password": "***",
+    "TypeAppel": 0,
+    "TypeTransaction": 0,
+    "ConfiguratorName": "Volet",
+    "AccountId": "102466",
+    "Language": "FR",
+    "ProductionSite": "DEL_BRECE",
+    "ApplicationUrl": "https://test.cfgroup.smartconfigurator.fr/Cfg_Middleware",
+    "ProjectRef": "AfficherBoutonPresenter"
+  }
+}

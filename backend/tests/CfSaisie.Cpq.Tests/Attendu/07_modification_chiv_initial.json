@@ -1,0 +1,27 @@
+{
+  "cas": "Modification d'une configuration CHIV_Initial (nom de configurateur contenant '_')",
+  "source": "ÉCART VOLONTAIRE avec Configurateur.CreeRequete (l.34-36), qui couperait au premier '_' et enverrait 'CHIV'. Le portail utilise le configurateur enregistré sur le dossier.",
+  "entree": {
+    "profil": { "identifiant": "cfgAxDelBrece@techform.fr", "motDePasse": "***", "modeErp": true },
+    "environnement": { "serveur": "test.cfgroup.smartconfigurator.fr" },
+    "action": "Modification",
+    "typeDocument": "Commande",
+    "configurateur": { "nom": "CHIV_Initial", "productionSite": "DEL_BRECE" },
+    "codeClient": "102466",
+    "configId": "CHIV_Initial_00000012",
+    "langue": "Francais"
+  },
+  "requeteAttendue": {
+    "Login": "cfgAxDelBrece@techform.fr",
+    "Password": "***",
+    "TypeAppel": 3,
+    "TypeTransaction": 4,
+    "ConfigId": "CHIV_Initial_00000012",
+    "ConfiguratorName": "CHIV_Initial",
+    "AccountId": "102466",
+    "Language": "FR",
+    "ProductionSite": "DEL_BRECE",
+    "ApplicationUrl": "https://test.cfgroup.smartconfigurator.fr/Cfg_Middleware",
+    "ProjectRef": "AfficherBoutonPresenter"
+  }
+}

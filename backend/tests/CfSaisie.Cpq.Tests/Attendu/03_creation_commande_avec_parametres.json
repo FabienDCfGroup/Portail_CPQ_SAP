@@ -1,0 +1,31 @@
+{
+  "cas": "Création d'une commande avec référence chantier, email et langue de notice",
+  "source": "PanneauPrincipal.ExecuterConfigurateur, grille dgv_Parametres (l.385-408) : Email, BusinessCode, ClientLangueNotice (seulement si non vide)",
+  "entree": {
+    "profil": { "identifiant": "cfgAxDelBrece@techform.fr", "motDePasse": "***", "modeErp": true },
+    "environnement": { "serveur": "test.cfgroup.smartconfigurator.fr" },
+    "action": "Creation",
+    "typeDocument": "Commande",
+    "configurateur": { "nom": "Volet", "productionSite": "DEL_BRECE" },
+    "codeClient": "102466",
+    "langue": "Francais",
+    "referenceChantier": "CHANTIER-DUP-1054",
+    "email": "contact@dupont-piscines.fr",
+    "langueNotice": "de"
+  },
+  "requeteAttendue": {
+    "Login": "cfgAxDelBrece@techform.fr",
+    "Password": "***",
+    "TypeAppel": 0,
+    "TypeTransaction": 4,
+    "ConfiguratorName": "Volet",
+    "AccountId": "102466",
+    "Language": "FR",
+    "ProductionSite": "DEL_BRECE",
+    "ApplicationUrl": "https://test.cfgroup.smartconfigurator.fr/Cfg_Middleware",
+    "ProjectRef": "AfficherBoutonPresenter",
+    "Email": "contact@dupont-piscines.fr",
+    "BusinessCode": "CHANTIER-DUP-1054",
+    "ClientLangueNotice": "de"
+  }
+}

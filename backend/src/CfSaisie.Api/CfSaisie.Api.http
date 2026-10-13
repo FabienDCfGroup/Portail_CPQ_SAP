@@ -1,0 +1,34 @@
+@CfSaisie.Api_HostAddress = http://localhost:5075
+
+GET {{CfSaisie.Api_HostAddress}}/api/session
+Accept: application/json
+
+###
+
+# Modification d'une commande existante à partir de son ConfigId
+POST {{CfSaisie.Api_HostAddress}}/api/lancements
+Content-Type: application/json
+
+{
+  "type": "Commande",
+  "action": "Modification",
+  "configId": "Volet_00000561",
+  "codeClient": "102466",
+  "environnement": "test"
+}
+
+###
+
+# Consultation d'un devis existant
+POST {{CfSaisie.Api_HostAddress}}/api/lancements
+Content-Type: application/json
+
+{
+  "type": "Devis",
+  "action": "Consultation",
+  "configId": "Moon_00006869",
+  "codeClient": "102466",
+  "environnement": "test"
+}
+
+###

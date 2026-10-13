@@ -1,0 +1,27 @@
+{
+  "cas": "Consultation d'une commande existante, profil ERP",
+  "source": "Configurateur.CreeRequete : Consultation (l.31-38), « Commande » → TypeTransaction Order ; le mode ERP envoie AccountId même hors création (l.94)",
+  "entree": {
+    "profil": { "identifiant": "cfgAxDelBrece@techform.fr", "motDePasse": "***", "modeErp": true },
+    "environnement": { "serveur": "test.cfgroup.smartconfigurator.fr" },
+    "action": "Consultation",
+    "typeDocument": "Commande",
+    "configurateur": { "nom": "Volet", "productionSite": "DEL_BRECE" },
+    "codeClient": "102466",
+    "configId": "Volet_00000561",
+    "langue": "Francais"
+  },
+  "requeteAttendue": {
+    "Login": "cfgAxDelBrece@techform.fr",
+    "Password": "***",
+    "TypeAppel": 4,
+    "TypeTransaction": 4,
+    "ConfigId": "Volet_00000561",
+    "ConfiguratorName": "Volet",
+    "AccountId": "102466",
+    "Language": "FR",
+    "ProductionSite": "DEL_BRECE",
+    "ApplicationUrl": "https://test.cfgroup.smartconfigurator.fr/Cfg_Middleware",
+    "ProjectRef": "AfficherBoutonPresenter"
+  }
+}

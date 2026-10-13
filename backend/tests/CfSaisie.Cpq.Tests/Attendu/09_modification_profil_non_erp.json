@@ -1,0 +1,25 @@
+{
+  "cas": "Modification avec un profil non ERP (ni AccountId ni ApplicationUrl)",
+  "source": "Configurateur.CreeRequete : AccountId n'est envoyé qu'en création (l.29) ou en mode ERP (l.94)",
+  "entree": {
+    "profil": { "identifiant": "mycf@techform.fr", "motDePasse": "***", "modeErp": false },
+    "environnement": { "serveur": "test.cfgroup.smartconfigurator.fr" },
+    "action": "Modification",
+    "typeDocument": "Devis",
+    "configurateur": { "nom": "Volet", "productionSite": "DEL_BRECE" },
+    "codeClient": "102466",
+    "configId": "Volet_00000561",
+    "langue": "Francais"
+  },
+  "requeteAttendue": {
+    "Login": "mycf@techform.fr",
+    "Password": "***",
+    "TypeAppel": 3,
+    "TypeTransaction": 0,
+    "ConfigId": "Volet_00000561",
+    "ConfiguratorName": "Volet",
+    "Language": "FR",
+    "ProductionSite": "DEL_BRECE",
+    "ProjectRef": "AfficherBoutonPresenter"
+  }
+}

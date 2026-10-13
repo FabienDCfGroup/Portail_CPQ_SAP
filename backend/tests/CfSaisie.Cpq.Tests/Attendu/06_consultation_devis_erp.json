@@ -1,0 +1,27 @@
+{
+  "cas": "Consultation d'un devis existant, profil ERP",
+  "source": "Configurateur.CreeRequete : Consultation (l.31-38)",
+  "entree": {
+    "profil": { "identifiant": "cfgAxDelBrece@techform.fr", "motDePasse": "***", "modeErp": true },
+    "environnement": { "serveur": "test.cfgroup.smartconfigurator.fr" },
+    "action": "Consultation",
+    "typeDocument": "Devis",
+    "configurateur": { "nom": "Volet", "productionSite": "DEL_BRECE" },
+    "codeClient": "102466",
+    "configId": "Volet_00000561",
+    "langue": "Francais"
+  },
+  "requeteAttendue": {
+    "Login": "cfgAxDelBrece@techform.fr",
+    "Password": "***",
+    "TypeAppel": 4,
+    "TypeTransaction": 0,
+    "ConfigId": "Volet_00000561",
+    "ConfiguratorName": "Volet",
+    "AccountId": "102466",
+    "Language": "FR",
+    "ProductionSite": "DEL_BRECE",
+    "ApplicationUrl": "https://test.cfgroup.smartconfigurator.fr/Cfg_Middleware",
+    "ProjectRef": "AfficherBoutonPresenter"
+  }
+}

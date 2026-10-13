@@ -1,0 +1,14 @@
+# Dossiers de travail hors dépôt
+/Analyse/
+/Projet source/
+
+# .NET (backend)
+bin/
+obj/
+.vs/
+*.user
+TestResults/
+
+# Node / React (frontend)
+node_modules/
+dist/

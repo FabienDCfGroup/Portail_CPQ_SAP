@@ -1,0 +1,36 @@
+/* Compléments au style de la maquette (maquette.css, repris tel quel). */
+
+.content > section { display: block; }
+.busy { opacity: .6; pointer-events: none; }
+.erreur-ligne { margin-top: 10px; padding: 10px 12px; border-radius: 10px; background: #fff3f3; border: 1px solid #ffd6d6; color: #c53a3a; text-align: center; }
+body.dark .erreur-ligne { background: #3a1f24; border-color: #6c2f37; color: #ffb3b3; }
+.info-ligne { margin-top: 10px; padding: 10px 12px; border-radius: 10px; background: rgba(20, 121, 248, .06); text-align: center; }
+.config-id { font-family: Consolas, monospace; font-size: 12px; }
+button:disabled { cursor: not-allowed; opacity: .55; }
+code { font-family: Consolas, monospace; }
+
+/* Vidéo de fond en boucle : derrière l'application, très atténuée ; visible entre les cartes, jamais derrière le texte. */
+.app { position: relative; isolation: isolate; }
+.fond-video {
+  position: fixed; inset: 0; z-index: -1;
+  width: 100%; height: 100%; object-fit: cover;
+  opacity: var(--opacite-video, .16);
+  pointer-events: none;
+}
+body.dark { --opacite-video: .12; }
+@media (prefers-reduced-motion: reduce) { .fond-video { display: none; } }
+
+/* Troisième carte de l'accueil : ouverture d'une configuration existante (modification / consultation). */
+.dashboard-grid { flex-wrap: wrap; }
+.dashboard-grid .action-card { flex: 1 1 300px; max-width: 460px; }
+.dashboard-grid .open-card { background: linear-gradient(135deg, #2d3a55, #5a6f93); }
+.dashboard-grid .open-card p { color: #e3eaf6; }
+.dashboard-grid .open-card .primary { color: #2d3a55; }
+
+/* Mode LOCAL (Middleware de développement sur le poste) : bleu, comme le bandeau de l'ancien outil. */
+body[data-env="local"] .topbar { border-bottom: 2px solid #1479f8; }
+body[data-env="local"] .env-badge { background: #e6f0ff; color: #0b4fb3; border-color: #a9c9ff; }
+body[data-env="local"] .env-badge:before { background: #1479f8; }
+
+/* Correction de la maquette : en mode Test, le bouton des cartes d'action devenait violet sur violet. */
+body[data-env="test"] .action-card .primary { background: #fff; }

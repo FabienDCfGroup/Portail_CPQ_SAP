@@ -1,0 +1,25 @@
+{
+  "cas": "Langue : Néerlandais",
+  "source": "Configurateur.CreeRequete : correspondance des langues (l.58-78)",
+  "entree": {
+    "profil": { "identifiant": "cfgAxDelBrece@techform.fr", "motDePasse": "***", "modeErp": true },
+    "environnement": { "serveur": "test.cfgroup.smartconfigurator.fr" },
+    "action": "Creation",
+    "typeDocument": "Devis",
+    "configurateur": { "nom": "Volet", "productionSite": "DEL_BRECE" },
+    "codeClient": "102466",
+    "langue": "Neerlandais"
+  },
+  "requeteAttendue": {
+    "Login": "cfgAxDelBrece@techform.fr",
+    "Password": "***",
+    "TypeAppel": 0,
+    "TypeTransaction": 0,
+    "ConfiguratorName": "Volet",
+    "AccountId": "102466",
+    "Language": "nl",
+    "ProductionSite": "DEL_BRECE",
+    "ApplicationUrl": "https://test.cfgroup.smartconfigurator.fr/Cfg_Middleware",
+    "ProjectRef": "AfficherBoutonPresenter"
+  }
+}

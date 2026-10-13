@@ -1,0 +1,15 @@
+{
+  "name": "cf-saisie-commandes-dev",
+  "private": true,
+  "description": "Lancement local du portail : API ASP.NET Core + front React en une seule commande.",
+  "scripts": {
+    "postinstall": "npm install --prefix frontend --no-audit --no-fund",
+    "dev": "concurrently --kill-others --names api,front --prefix-colors blue,magenta \"npm:dev:api\" \"npm:dev:front\"",
+    "dev:api": "dotnet run --project backend/src/CfSaisie.Api",
+    "dev:front": "npm run dev --prefix frontend",
+    "test": "dotnet test backend"
+  },
+  "devDependencies": {
+    "concurrently": "9.1.2"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "cas": "Modification d'un devis existant, profil ERP",
+  "source": "Configurateur.CreeRequete : Modification (l.31-38), « Devis » → TypeTransaction Quote ; le mode ERP envoie AccountId même hors création (l.94)",
+  "entree": {
+    "profil": { "identifiant": "cfgAxDelBrece@techform.fr", "motDePasse": "***", "modeErp": true },
+    "environnement": { "serveur": "test.cfgroup.smartconfigurator.fr" },
+    "action": "Modification",
+    "typeDocument": "Devis",
+    "configurateur": { "nom": "Moon", "productionSite": "DEL_BRECE" },
+    "codeClient": "102466",
+    "configId": "Moon_00006869",
+    "langue": "Francais"
+  },
+  "requeteAttendue": {
+    "Login": "cfgAxDelBrece@techform.fr",
+    "Password": "***",
+    "TypeAppel": 3,
+    "TypeTransaction": 0,
+    "ConfigId": "Moon_00006869",
+    "ConfiguratorName": "Moon",
+    "AccountId": "102466",
+    "Language": "FR",
+    "ProductionSite": "DEL_BRECE",
+    "ApplicationUrl": "https://test.cfgroup.smartconfigurator.fr/Cfg_Middleware",
+    "ProjectRef": "AfficherBoutonPresenter"
+  }
+}

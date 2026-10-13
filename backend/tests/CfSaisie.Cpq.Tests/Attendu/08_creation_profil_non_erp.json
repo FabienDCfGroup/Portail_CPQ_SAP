@@ -1,0 +1,24 @@
+{
+  "cas": "Création avec un profil non ERP (pas d'ApplicationUrl)",
+  "source": "Configurateur.CreeRequete : ApplicationUrl n'est renseigné que dans la branche mode ERP (l.91-98)",
+  "entree": {
+    "profil": { "identifiant": "mycf@techform.fr", "motDePasse": "***", "modeErp": false },
+    "environnement": { "serveur": "test.cfgroup.smartconfigurator.fr" },
+    "action": "Creation",
+    "typeDocument": "Devis",
+    "configurateur": { "nom": "Volet", "productionSite": "DEL_BRECE" },
+    "codeClient": "102466",
+    "langue": "Francais"
+  },
+  "requeteAttendue": {
+    "Login": "mycf@techform.fr",
+    "Password": "***",
+    "TypeAppel": 0,
+    "TypeTransaction": 0,
+    "ConfiguratorName": "Volet",
+    "AccountId": "102466",
+    "Language": "FR",
+    "ProductionSite": "DEL_BRECE",
+    "ProjectRef": "AfficherBoutonPresenter"
+  }
+}
