@@ -2,13 +2,30 @@ import { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { api, type Session } from './api';
 import { App } from './App';
+import { EcranChargement } from './composants/Chargement';
 import { FournisseurApp } from './contexte';
 import './styles/maquette.css';
 import './styles/portail.css';
 
+// Thème sombre appliqué dès l'écran de chargement (le contexte de l'application n'est pas encore monté).
+try {
+  document.body.classList.toggle('dark', localStorage.getItem('cf-theme') === 'dark');
+} catch {
+  // Stockage indisponible : thème clair.
+}
+
+// Durée minimale de l'écran de chargement, pour qu'il ne se réduise pas à un flash quand l'API répond vite.
+const DUREE_MINIMALE_MS = 1200;
+
 function Demarrage() {
   const [session, setSession] = useState<Session | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
+  const [delaiEcoule, setDelaiEcoule] = useState(false);
+
+  useEffect(() => {
+    const minuteur = window.setTimeout(() => setDelaiEcoule(true), DUREE_MINIMALE_MS);
+    return () => window.clearTimeout(minuteur);
+  }, []);
 
   // Au lancement de « npm run dev », le navigateur s'ouvre avant que l'API ait fini de démarrer :
   // on réessaie pendant une minute avant d'afficher une erreur.
@@ -40,13 +57,8 @@ function Demarrage() {
       </div>
     );
   }
-  if (!session) {
-    return (
-      <div className="content" style={{ textAlign: 'center', marginTop: '30vh' }}>
-        <h2>CF Saisie commandes</h2>
-        <p className="muted">Démarrage du serveur…</p>
-      </div>
-    );
+  if (!session || !delaiEcoule) {
+    return <EcranChargement titre="CF Saisie commandes" texte="Démarrage du portail" />;
   }
   return (
     <FournisseurApp session={session}>

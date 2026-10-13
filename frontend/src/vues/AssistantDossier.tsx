@@ -11,6 +11,7 @@ import {
   type SaisieDossier,
   type TypeDossier,
 } from '../api';
+import { pageAttenteConfigurateur } from '../composants/Chargement';
 import { Modale } from '../composants/Modale';
 import { useApp } from '../contexte';
 import { imageProduit, urlCss, vide } from '../outils';
@@ -68,10 +69,6 @@ function trouverClient(clients: Client[], saisie: string) {
   );
 }
 
-const pageAttente = `<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>CF Configurator</title></head>
-<body style="margin:0;font-family:Segoe UI,Arial,sans-serif;display:grid;place-items:center;height:100vh;background:#f4f8fc;color:#0b1f53">
-<div style="text-align:center"><div style="font-size:22px;font-weight:800">Ouverture du configurateur…</div>
-<p style="color:#70809b">Le Middleware CPQ prépare la session, cela peut prendre quelques secondes.</p></div></body></html>`;
 
 export function AssistantDossier({
   ouverture,
@@ -304,7 +301,7 @@ export function AssistantDossier({
       notifier('Autorisez les fenêtres popup pour ouvrir le configurateur.');
       return;
     }
-    fenetre.document.write(pageAttente);
+    fenetre.document.write(pageAttenteConfigurateur(`Ouverture du configurateur ${p.configurateur || p.nom}`));
     fenetre.document.close();
     setOccupe(true);
     try {
