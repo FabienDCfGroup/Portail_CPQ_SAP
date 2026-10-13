@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # CF Saisie commandes
 
 Portail web de saisie des commandes et devis : choix du client, livraison ou retrait, lancement des configurateurs CPQ via le Middleware, finalisation et envoi à SAP.
@@ -108,3 +109,6 @@ Front ◄── URL du configurateur + ConfigId ◄──┘
 ```
 npm test
 ```
+=======
+# Portail_CPQ_SAP
+>>>>>>> eb86c2e84cc9e2536c98ba3c3534bd4514ea9f3c
