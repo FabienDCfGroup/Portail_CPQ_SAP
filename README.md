@@ -52,6 +52,17 @@ Si le lancement échoue avec « address already in use » (API) ou « Port 5173 
 | `Middleware:Environnements:local` | Middleware installé sur le poste de développement (`n-brece133.fija.local`). Déclaré **uniquement** dans `appsettings.Development.json` : absent des déploiements. Profil propre possible via `Middleware:Environnements:local:Profil` |
 | `Middleware:Simulation` | `true` : aucun appel réseau, URL fictive |
 | `Portail:UtilisateurSimule` | Utilisateur affiché tant que l'authentification réelle n'est pas branchée |
+| `PlanningCcx:Url` | API Planning CCX (n8n) : disponibilités de fabrication par code CCX (instance de test pour l'instant) |
+| `PlanningCcx:CleApi` | En-tête `X-API-Key` — **secret** : `dotnet user-secrets set "PlanningCcx:CleApi" "<clé>" --project backend/src/CfSaisie.Api`. Absente : API simulée (poste de développement uniquement) |
+| `PlanningCcx:NbJours` / `SeuilPlacesLimitees` | Horizon du calendrier (90 j) ; jusqu'à 2 places restantes, le jour est « places limitées » |
+
+### Date de fin de production
+
+À la fermeture du configurateur, l'API lit le XML de fin de configuration dans le Middleware (`GetXmlForSite`) et y cherche l'attribut `ccx` (`/Dossier/Attributs/Attribut[@Key="ccx"]`), calculé par le configurateur (aujourd'hui le Liner) :
+
+- **code CCX présent** : calendrier de l'API Planning CCX pour ce code et le site de production ; la date est revérifiée à la validation ;
+- **pas de code CCX**, ou pas de planning pour ce code : date de fin de production saisie librement ;
+- **XML absent** : la configuration n'a pas encore été enregistrée dans le configurateur.
 
 ## Rôles (simulés en attendant l'authentification)
 

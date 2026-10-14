@@ -58,14 +58,6 @@ public static class PortailEndpoints
 
         api.MapGet("/agences", async (ISapLogistiqueService sap, CancellationToken ct) => await sap.AgencesAsync(ct));
 
-        api.MapGet("/produits/{id:int}/planning", async (int id, CfSaisieContext db, ISapLogistiqueService sap, TimeProvider horloge, CancellationToken ct) =>
-        {
-            var produit = await db.Produits.FindAsync([id], ct);
-            if (produit is null) return Results.NotFound();
-            var (delai, jours) = await sap.PlanningAsync(produit.Nom, DateOnly.FromDateTime(horloge.GetLocalNow().DateTime), 21, ct);
-            return Results.Ok(new PlanningDto(produit.Nom, delai, jours.Select(j => new JourPlanningDto(j.Date, j.Etat.ToString(), j.Libelle)).ToList()));
-        });
-
         api.MapGet("/commentaires", async (CfSaisieContext db, CancellationToken ct) =>
             (await db.CommentaireFamilles.Include(f => f.Modeles).AsNoTracking().ToListAsync(ct))
                 .OrderBy(f => f.Ordre).ThenBy(f => f.Nom)
@@ -85,6 +77,10 @@ public static class PortailEndpoints
 
         dossiers.MapPost("/{id:int}/configurateur", (int id, LancerConfigurateurDto demande, ServiceDossiers service, CancellationToken ct) =>
             service.RelancerAsync(id, demande, ct));
+
+        // Planning de fin de production : calendrier si le XML de fin de configuration contient un code CCX, date libre sinon.
+        dossiers.MapGet("/{id:int}/planning", (int id, ServicePlanning service, CancellationToken ct) =>
+            service.PlanningAsync(id, ct));
 
         dossiers.MapPost("/{id:int}/configuration-enregistree", (int id, ServiceDossiers service, CancellationToken ct) =>
             service.ConfigurationEnregistreeAsync(id, ct));

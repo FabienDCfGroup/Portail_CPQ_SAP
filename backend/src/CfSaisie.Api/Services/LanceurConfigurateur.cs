@@ -65,6 +65,30 @@ public sealed class LanceurConfigurateur(
         return resultat;
     }
 
+    /// <summary>
+    /// XML de fin de configuration d'un dossier (GetXmlForSite), recherché sur le site de production envoyé au lancement.
+    /// </summary>
+    public async Task<ResultatXmlConfiguration> LireXmlAsync(Dossier dossier, Configurateur configurateur, string environnement, CancellationToken annulation)
+    {
+        var o = options.Value;
+        var env = new EnvironnementMiddleware(o.Environnements[environnement].Serveur);
+        var profil = o.ProfilDe(environnement);
+        var requete = new SmartDataExchangeDefines.Models.GetXMLRequest
+        {
+            Login = profil.Identifiant,
+            Password = profil.MotDePasse ?? string.Empty,
+            ConfigurationId = dossier.ConfigId,
+            ConfiguratorName = configurateur.Nom,
+            AccountId = dossier.CodeClient,
+            SiteId = string.IsNullOrWhiteSpace(configurateur.ProductionSite) ? OpenRequestBuilder.ProductionSiteParDefaut : configurateur.ProductionSite,
+            ApplicationUrl = env.UrlApplication,
+        };
+        var resultat = await middleware.LireXmlAsync(requete, env, annulation);
+        journal.LogInformation("XML de configuration pour {Dossier} ({ConfigId}) : succès={Succes}, message={Message}",
+            dossier.Reference, dossier.ConfigId, resultat.Succes, resultat.Message);
+        return resultat;
+    }
+
     /// <summary>Langue du client SAP (FR, EN, DE, NL…) convertie pour le configurateur ; vide si non gérée (ex. PT).</summary>
     public static LangueConfigurateur? Langue(string? codeLangue) => codeLangue?.ToUpperInvariant() switch
     {

@@ -70,6 +70,54 @@ public class MiddlewareCpqClientTests
         Assert.Contains("500", erreur.Message);
     }
 
+    [Fact]
+    public async Task LireXmlAsync_EnvoieLaRechercheSurGetXmlForSite()
+    {
+        var serveur = new ServeurFactice(HttpStatusCode.OK, """{"Message":null,"Success":true,"XMLResult":"<Dossier\/>"}""");
+
+        await new MiddlewareCpqClient(new HttpClient(serveur)).LireXmlAsync(RequeteXml(), Recette);
+
+        Assert.Equal(HttpMethod.Post, serveur.Methode);
+        Assert.Equal("https://test.cfgroup.smartconfigurator.fr/Cfg_Middleware/Service.svc/GetXmlForSite", serveur.Url);
+        Assert.Contains("\"ConfigurationId\":\"Liner_00000418\"", serveur.Corps);
+        Assert.Contains("\"SiteId\":\"DEL_BRECE\"", serveur.Corps);
+        Assert.Contains("\"AccountId\":\"102466\"", serveur.Corps);
+    }
+
+    [Fact]
+    public async Task LireXmlAsync_Succes_RenvoieLeXml()
+    {
+        var serveur = new ServeurFactice(HttpStatusCode.OK, """{"Message":"","Success":true,"XMLResult":"<Dossier><Attributs\/><\/Dossier>"}""");
+
+        var resultat = await new MiddlewareCpqClient(new HttpClient(serveur)).LireXmlAsync(RequeteXml(), Recette);
+
+        Assert.True(resultat.Succes);
+        Assert.Equal("<Dossier><Attributs/></Dossier>", resultat.Xml);
+    }
+
+    [Fact]
+    public async Task LireXmlAsync_ConfigurationNonEnregistree_RenvoieLeMessageSansXml()
+    {
+        var serveur = new ServeurFactice(HttpStatusCode.OK, """{"Message":"No config found for this Id Config","Success":false,"XMLResult":""}""");
+
+        var resultat = await new MiddlewareCpqClient(new HttpClient(serveur)).LireXmlAsync(RequeteXml(), Recette);
+
+        Assert.False(resultat.Succes);
+        Assert.Null(resultat.Xml);
+        Assert.Equal("No config found for this Id Config", resultat.Message);
+    }
+
+    private static GetXMLRequest RequeteXml() => new()
+    {
+        Login = "cfgAxDelBrece@techform.fr",
+        Password = "***",
+        ConfigurationId = "Liner_00000418",
+        ConfiguratorName = "Liner",
+        SiteId = "DEL_BRECE",
+        AccountId = "102466",
+        ApplicationUrl = Recette.UrlApplication,
+    };
+
     private static OpenRequest Requete() => new()
     {
         Login = "cfgAxDelBrece@techform.fr",

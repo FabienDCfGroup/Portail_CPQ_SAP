@@ -29,15 +29,6 @@ public sealed record AdresseLivraisonSap(
 
 public sealed record AgenceRetraitSap(string Code, string Libelle);
 
-public enum EtatCapacite
-{
-    Disponible,
-    Limitee,
-    Complet,
-}
-
-public sealed record JourPlanningSap(DateOnly Date, EtatCapacite Etat, string Libelle);
-
 public sealed record CommandeAEnvoyer(
     string ReferencePortail,
     bool EstDevis,
@@ -60,9 +51,6 @@ public interface ISapClientService
 public interface ISapLogistiqueService
 {
     Task<IReadOnlyList<AgenceRetraitSap>> AgencesAsync(CancellationToken annulation = default);
-
-    /// <summary>Jours ouvrés proposables pour la fin de production d'un produit.</summary>
-    Task<(int DelaiJours, IReadOnlyList<JourPlanningSap> Jours)> PlanningAsync(string produit, DateOnly aPartirDu, int nombreJours, CancellationToken annulation = default);
 }
 
 public interface ISapCommandeService

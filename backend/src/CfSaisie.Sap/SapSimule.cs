@@ -2,7 +2,7 @@ namespace CfSaisie.Sap;
 
 /// <summary>
 /// SAP simulé pour le développement. Données et règles reprises de la maquette
-/// (CF_Saisie_commandes_interactive_v21.html) : clients, adresses, agences, délais et planning.
+/// (CF_Saisie_commandes_interactive_v21.html) : clients, adresses, agences. Le planning de fabrication vient de l'API Planning CCX.
 /// </summary>
 public sealed class SapSimule : ISapClientService, ISapLogistiqueService, ISapCommandeService
 {
@@ -60,13 +60,6 @@ public sealed class SapSimule : ISapClientService, ISapLogistiqueService, ISapCo
         new("OCCITANIE", "Occitanie"),
     ];
 
-    // Délais indicatifs de fabrication (jours) de la maquette, par nom de produit.
-    private static readonly Dictionary<string, int> Delais = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ["Liner sur mesure"] = 8, ["Rolleasy2"] = 10, ["Moon"] = 12, ["Contura"] = 14, ["Rollover"] = 11,
-        ["Rollin"] = 15, ["Rollinside"] = 17, ["Rolenergy"] = 18, ["Initial"] = 7, ["Supergreen"] = 9,
-    };
-
     private int _compteurSap = 1_000_000 + Random.Shared.Next(8_000_000);
 
     public Task<IReadOnlyList<ClientSap>> RechercherAsync(string? recherche, int maximum, CancellationToken annulation = default)
@@ -90,37 +83,9 @@ public sealed class SapSimule : ISapClientService, ISapLogistiqueService, ISapCo
     public Task<IReadOnlyList<AgenceRetraitSap>> AgencesAsync(CancellationToken annulation = default) =>
         Task.FromResult<IReadOnlyList<AgenceRetraitSap>>(Agences);
 
-    public Task<(int DelaiJours, IReadOnlyList<JourPlanningSap> Jours)> PlanningAsync(string produit, DateOnly aPartirDu, int nombreJours, CancellationToken annulation = default)
-    {
-        var delai = Delais.TryGetValue(produit, out var d) ? d : 10;
-        var jours = new List<JourPlanningSap>();
-        var curseur = aPartirDu.AddDays(delai);
-        while (jours.Count < nombreJours)
-        {
-            if (curseur.DayOfWeek is not (DayOfWeek.Saturday or DayOfWeek.Sunday))
-            {
-                jours.Add(Capacite(produit, curseur));
-            }
-            curseur = curseur.AddDays(1);
-        }
-        return Task.FromResult<(int, IReadOnlyList<JourPlanningSap>)>((delai, jours));
-    }
-
     public Task<ResultatEnvoiSap> EnvoyerAsync(CommandeAEnvoyer commande, CancellationToken annulation = default)
     {
         var numero = "45" + Interlocked.Increment(ref _compteurSap).ToString("D7");
         return Task.FromResult(new ResultatEnvoiSap(true, numero, null));
-    }
-
-    // Même pseudo-aléa que la maquette (productionCapacityFor) pour un rendu reproductible.
-    private static JourPlanningSap Capacite(string produit, DateOnly date)
-    {
-        var graine = (produit.Sum(c => c) + date.Day + (date.Month - 1) * 13) % 10;
-        return graine switch
-        {
-            0 or 7 => new JourPlanningSap(date, EtatCapacite.Complet, "Complet"),
-            1 or 4 or 8 => new JourPlanningSap(date, EtatCapacite.Limitee, "1 à 2 places"),
-            _ => new JourPlanningSap(date, EtatCapacite.Disponible, "Disponible"),
-        };
     }
 }

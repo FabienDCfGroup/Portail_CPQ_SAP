@@ -11,7 +11,7 @@ import {
   type SaisieDossier,
   type TypeDossier,
 } from '../api';
-import { pageAttenteConfigurateur } from '../composants/Chargement';
+import { afficherAttente } from '../composants/Chargement';
 import { Modale } from '../composants/Modale';
 import { useApp } from '../contexte';
 import { imageProduit, urlCss, vide } from '../outils';
@@ -301,8 +301,7 @@ export function AssistantDossier({
       notifier('Autorisez les fenêtres popup pour ouvrir le configurateur.');
       return;
     }
-    fenetre.document.write(pageAttenteConfigurateur(`Ouverture du configurateur ${p.configurateur || p.nom}`));
-    fenetre.document.close();
+    afficherAttente(fenetre, `Ouverture du configurateur ${p.configurateur || p.nom}`);
     setOccupe(true);
     try {
       let resultat;
@@ -644,18 +643,14 @@ export function AssistantDossier({
                     <>
                       {' '}
                       · Configuration <span className="config-id">{dossier.configId}</span>
-                      {dossier.environnement === 'production' ? ' (production)' : ' (test)'}
+                      {` (${dossier.environnement ?? 'test'})`}
                     </>
                   )}
                 </p>
                 <div className="finalize-order-fields">
                   <div className="finalize-order-field">
                     <label>Date de fin de prod</label>
-                    {produit.id > 0 ? (
-                      <PlanningProduction produitId={produit.id} valeur={champs.dateFinProduction} surChoix={(d) => maj({ dateFinProduction: d })} />
-                    ) : (
-                      <p className="muted">Produit absent du catalogue : planning indisponible.</p>
-                    )}
+                    <PlanningProduction dossierId={dossier.id} valeur={champs.dateFinProduction} surChoix={(d) => maj({ dateFinProduction: d })} />
                   </div>
                   {(['commentaireExterne', 'commentaireInterne'] as const).map((cle) => (
                     <div key={cle} className="finalize-order-field">

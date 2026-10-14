@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api, type ActionOuverture, type Client, type TypeDossier } from '../api';
-import { pageAttenteConfigurateur } from '../composants/Chargement';
+import { afficherAttente } from '../composants/Chargement';
 import { Modale } from '../composants/Modale';
 import { useApp } from '../contexte';
 
@@ -40,8 +40,7 @@ export function OuvertureConfiguration({ surFermer }: { surFermer: () => void })
       setErreur('Autorisez les fenêtres popup pour ouvrir le configurateur.');
       return;
     }
-    fenetre.document.write(pageAttenteConfigurateur(`${id} — ${action === 'Modification' ? 'modification' : 'consultation'}`));
-    fenetre.document.close();
+    afficherAttente(fenetre, `${id} — ${action === 'Modification' ? 'modification' : 'consultation'}`);
     setOccupe(true);
     setErreur(null);
     try {

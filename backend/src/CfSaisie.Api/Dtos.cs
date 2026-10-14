@@ -25,10 +25,6 @@ public sealed record ProduitCatalogueDto(int Id, string Nom, string? Description
 
 public sealed record FamilleCatalogueDto(int Id, string Nom, string? Image, IReadOnlyList<ProduitCatalogueDto> Produits);
 
-public sealed record PlanningDto(string Produit, int DelaiJours, IReadOnlyList<JourPlanningDto> Jours);
-
-public sealed record JourPlanningDto(DateOnly Date, string Etat, string Libelle);
-
 public sealed record LancementDto(bool Succes, bool PeutOuvrir, string? Message, string? Url, string? ConfigId);
 
 /// <summary>Données saisies dans l'assistant de création (client, références, livraison, finalisation).</summary>

@@ -60,6 +60,21 @@ export function EcranChargement({ titre, texte }: { titre: string; texte?: strin
 }
 
 /**
+ * Affiche la page d'attente dans la fenêtre du configurateur. Si cette fenêtre montre encore un configurateur
+ * précédent (autre origine), le navigateur interdit d'y écrire : elle est alors simplement réutilisée, puis redirigée.
+ */
+export function afficherAttente(fenetre: Window, titre: string) {
+  try {
+    fenetre.document.open();
+    fenetre.document.write(pageAttenteConfigurateur(titre));
+    fenetre.document.close();
+  } catch {
+    // Fenêtre d'une autre origine (configurateur déjà ouvert) : pas de page d'attente.
+  }
+  fenetre.focus();
+}
+
+/**
  * Page d'attente écrite dans la fenêtre du configurateur, le temps que le Middleware réponde.
  * L'URL du logo est rendue absolue : la fenêtre (about:blank) ne résout pas les chemins du portail de la même façon.
  */

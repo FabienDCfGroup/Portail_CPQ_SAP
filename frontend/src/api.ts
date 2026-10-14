@@ -66,15 +66,32 @@ export interface FamilleCatalogue {
   produits: ProduitCatalogue[];
 }
 
+/** Calendrier : le XML de fin de configuration contient un code CCX ; Libre : date saisie librement. */
+export type ModePlanning = 'Calendrier' | 'Libre' | 'ConfigurationNonEnregistree';
+
 export interface JourPlanning {
+  /** Date de fin de production, AAAA-MM-JJ (sans fuseau). */
   date: string;
-  etat: 'Disponible' | 'Limitee' | 'Complet';
+  etat: 'Disponible' | 'Limite' | 'Complet' | 'AvantDelai';
   libelle: string;
+  selectionnable: boolean;
+  /** Date du jour : à confirmer explicitement (comportement de l'écran AX). */
+  confirmationRequise: boolean;
+  placesRestantes: number | null;
+  motif: string | null;
 }
 
-export interface Planning {
-  produit: string;
-  delaiJours: number;
+export interface PlanningDossier {
+  mode: ModePlanning;
+  message: string | null;
+  codeCcx: string | null;
+  libelleCcx: string | null;
+  site: string | null;
+  delaiMiniJoursOuvres: number | null;
+  premiereDateAutorisee: string | null;
+  /** Charge AX seulement : les fabrications déjà passées dans SAP ne sont pas encore comptées. */
+  chargeIncomplete: boolean;
+  origines: string[];
   jours: JourPlanning[];
 }
 
@@ -219,7 +236,6 @@ export const api = {
   client: (code: string) => appeler<ClientDetail>('GET', `/clients/${encodeURIComponent(code)}`),
   catalogue: (code: string) => appeler<FamilleCatalogue[]>('GET', `/clients/${encodeURIComponent(code)}/catalogue`),
   agences: () => appeler<Agence[]>('GET', '/agences'),
-  planning: (produitId: number) => appeler<Planning>('GET', `/produits/${produitId}/planning`),
   commentaires: () => appeler<CommentaireFamille[]>('GET', '/commentaires'),
 
   dossier: (id: number) => appeler<Dossier>('GET', `/dossiers/${id}`),
@@ -229,6 +245,7 @@ export const api = {
   relancerConfigurateur: (id: number, produitId: number | null, environnement: string) =>
     appeler<DossierLance>('POST', `/dossiers/${id}/configurateur`, { produitId, environnement }),
   configurationEnregistree: (id: number) => appeler<Dossier>('POST', `/dossiers/${id}/configuration-enregistree`),
+  planningDossier: (id: number) => appeler<PlanningDossier>('GET', `/dossiers/${id}/planning`),
   validerDossier: (id: number, saisie: SaisieDossier) => appeler<Dossier>('POST', `/dossiers/${id}/valider`, saisie),
   ouvrirConfiguration: (demande: OuvertureConfiguration) => appeler<Lancement>('POST', '/lancements', demande),
 };

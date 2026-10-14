@@ -48,6 +48,25 @@ else
 builder.Services.AddScoped<LanceurConfigurateur>();
 builder.Services.AddScoped<ServiceDossiers>();
 builder.Services.AddScoped<ServiceLancements>();
+builder.Services.AddScoped<ServicePlanning>();
+
+// API Planning CCX (n8n) : simulée tant que la clé n'est pas renseignée, ce qui n'est admis que sur le poste de développement.
+builder.Services.AddOptions<ParametresPlanningCcx>()
+    .Bind(builder.Configuration.GetSection(ParametresPlanningCcx.Section))
+    .Validate(p => !p.Simulation || builder.Environment.IsDevelopment(),
+        "PlanningCcx:CleApi est absente. Renseignez-la (secret du conteneur, ou en local : dotnet user-secrets set \"PlanningCcx:CleApi\" \"<clé>\" --project src/CfSaisie.Api)")
+    .Validate(p => p.Simulation || Uri.TryCreate(p.Url, UriKind.Absolute, out _), "PlanningCcx:Url doit être une URL absolue.")
+    .Validate(p => p.NbJours > 0 && p.SeuilPlacesLimitees >= 0, "PlanningCcx:NbJours et PlanningCcx:SeuilPlacesLimitees sont invalides.")
+    .ValidateOnStart();
+builder.Services.AddSingleton(sp => sp.GetRequiredService<Microsoft.Extensions.Options.IOptions<ParametresPlanningCcx>>().Value);
+if (string.IsNullOrWhiteSpace(builder.Configuration[$"{ParametresPlanningCcx.Section}:{nameof(ParametresPlanningCcx.CleApi)}"]))
+{
+    builder.Services.AddSingleton<IPlanningCcxService, PlanningCcxSimule>();
+}
+else
+{
+    builder.Services.AddHttpClient<IPlanningCcxService, PlanningCcxClient>(c => c.Timeout = TimeSpan.FromSeconds(20));
+}
 
 var app = builder.Build();
 
@@ -59,7 +78,7 @@ app.UseExceptionHandler(e => e.Run(async contexte =>
     {
         RequeteInvalideException or DemandeLancementInvalideException or EnvironnementInconnuException => (StatusCodes.Status400BadRequest, erreur.Message),
         DossierIntrouvableException => (StatusCodes.Status404NotFound, erreur.Message),
-        MiddlewareCpqException => (StatusCodes.Status502BadGateway, erreur.Message),
+        MiddlewareCpqException or PlanningCcxException => (StatusCodes.Status502BadGateway, erreur.Message),
         _ => (StatusCodes.Status500InternalServerError, "Erreur inattendue du serveur."),
     };
     if (statut == StatusCodes.Status502BadGateway || statut == StatusCodes.Status500InternalServerError)

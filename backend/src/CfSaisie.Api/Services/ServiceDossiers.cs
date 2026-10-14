@@ -15,6 +15,7 @@ public sealed class ServiceDossiers(
     ISapClientService clients,
     ISapCommandeService commandesSap,
     LanceurConfigurateur lanceur,
+    ServicePlanning planning,
     TimeProvider horloge)
 {
     public static readonly string[] ModesLivraison = ["Chez le client", "A saisir", "Retrait en agence"];
@@ -129,6 +130,12 @@ public sealed class ServiceDossiers(
 
         if (dossier.Produit is null) throw new RequeteInvalideException("Choisissez d'abord un produit / configurateur.");
         if (dossier.DateFinProduction is null) throw new RequeteInvalideException("Renseignez la date de fin de prod.");
+        // Saisie libre comme calendrier : une fin de production ne peut pas être dans le passé.
+        if (dossier.DateFinProduction < DateOnly.FromDateTime(Maintenant()))
+        {
+            throw new RequeteInvalideException("La date de fin de prod ne peut pas être antérieure à aujourd'hui.");
+        }
+        await planning.VerifierDateAsync(dossier, dossier.DateFinProduction.Value, annulation);
 
         var envoi = await commandesSap.EnvoyerAsync(new CommandeAEnvoyer(
             dossier.Reference, dossier.Type == TypeDossier.Devis, dossier.CodeClient, dossier.NomProduit, dossier.ConfigId, dossier.DateFinProduction), annulation);
