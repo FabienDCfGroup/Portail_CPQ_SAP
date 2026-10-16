@@ -94,7 +94,8 @@ public sealed class ServicePlanning(
         if (calendrier is null)
         {
             return PlanningDossierDto.Sans(ModePlanning.Libre,
-                $"Pas de planning de fabrication pour la ligne {configuration.CodeCcx} sur le site {site} : saisissez la date de fin de production.");
+                $"Pas de planning de fabrication pour la ligne {configuration.CodeCcx} sur le site {site} : saisissez la date de fin de production.")
+                with { CodeCcx = configuration.CodeCcx };
         }
 
         return new PlanningDossierDto(
@@ -113,7 +114,8 @@ public sealed class ServicePlanning(
     /// <summary>
     /// Contrôle à la validation : la charge a pu évoluer depuis le choix de la date, elle est donc revérifiée.
     /// </summary>
-    public async Task VerifierDateAsync(Dossier dossier, DateOnly date, CancellationToken annulation)
+    /// <returns>Code CCX de la configuration (attribut ccx du XML du configurateur), null s'il n'y en a pas.</returns>
+    public async Task<string?> VerifierDateAsync(Dossier dossier, DateOnly date, CancellationToken annulation)
     {
         var planning = await CalculerAsync(dossier, annulation);
         switch (planning.Mode)
@@ -124,5 +126,6 @@ public sealed class ServicePlanning(
                 throw new RequeteInvalideException(
                     $"La date de fin de production du {date:dd/MM/yyyy} n'est plus disponible pour la ligne {planning.CodeCcx} : choisissez une autre date.");
         }
+        return planning.CodeCcx;
     }
 }

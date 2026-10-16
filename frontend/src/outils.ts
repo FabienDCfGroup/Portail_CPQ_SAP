@@ -1,4 +1,5 @@
 // Fonctions d'affichage reprises de la maquette.
+import { locale } from './i18n';
 
 const palettes: Record<string, [string, string]> = {
   Liner: ['#8fe1ff', '#1479f8'],
@@ -22,6 +23,21 @@ export function imageProduit(nom: string, famille: string, image?: string | null
 export const urlCss = (url: string) => `url("${url.replace(/"/g, '%22')}")`;
 
 export const dateLongue = (isoJour: string) =>
-  new Date(`${isoJour}T00:00:00`).toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+  new Date(`${isoJour}T00:00:00`).toLocaleDateString(locale(), { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' });
+
+/** « Thomas Martin » → « T.Martin » (colonne « Créé par » du suivi, comme la maquette). */
+export function nomCourt(nomComplet: string) {
+  const parties = nomComplet.trim().split(/\s+/).filter(Boolean);
+  if (!parties.length) return '—';
+  if (parties.length === 1) return parties[0];
+  return `${parties[0].charAt(0).toUpperCase()}.${parties.slice(1).join(' ')}`;
+}
+
+export const dateHeure = (iso: string) =>
+  new Date(iso).toLocaleString(locale(), { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+/** Date AAAA-MM-JJ (sans fuseau) → JJ/MM/AAAA ; « — » si absente. */
+export const dateCourte = (isoJour: string | null | undefined) =>
+  isoJour ? new Date(`${isoJour}T00:00:00`).toLocaleDateString(locale()) : '—';
 
 export const vide = (v: string | null | undefined) => (v && v.trim() ? v.trim() : null);

@@ -6,19 +6,20 @@ import { useApp } from '../contexte';
 type Onglet = 'bibliotheque' | 'tableau';
 
 export function GestionMessages() {
+  const { t } = useApp();
   const [onglet, setOnglet] = useState<Onglet>('bibliotheque');
   return (
     <section id="messages" className="view active">
       <div className="hero">
-        <h1>Gestion des messages</h1>
-        <p>Gérez la bibliothèque de commentaires utilisables dans les commandes et les messages affichés sur le tableau de bord.</p>
+        <h1>{t('Gestion des messages')}</h1>
+        <p>{t('Gérez la bibliothèque de commentaires utilisables dans les commandes et les messages affichés sur le tableau de bord.')}</p>
       </div>
       <div className="message-admin-tabs">
         <button className={onglet === 'bibliotheque' ? 'active' : ''} onClick={() => setOnglet('bibliotheque')}>
-          Bibliothèque de commentaires
+          {t('Bibliothèque de commentaires')}
         </button>
         <button className={onglet === 'tableau' ? 'active' : ''} onClick={() => setOnglet('tableau')}>
-          Messages tableau de bord
+          {t('Messages tableau de bord')}
         </button>
       </div>
       {onglet === 'bibliotheque' ? <Bibliotheque /> : <MessagesTableauBord />}
@@ -27,7 +28,7 @@ export function GestionMessages() {
 }
 
 function Bibliotheque() {
-  const { notifier } = useApp();
+  const { notifier, t } = useApp();
   const [familles, setFamilles] = useState<CommentaireFamille[]>([]);
   const [recherche, setRecherche] = useState('');
   const [familleEditee, setFamilleEditee] = useState<Partial<CommentaireFamille> | null>(null);
@@ -60,20 +61,20 @@ function Bibliotheque() {
     <div className="card">
       <div className="admin-section-title">
         <div>
-          <h2>Bibliothèque de commentaires</h2>
+          <h2>{t('Bibliothèque de commentaires')}</h2>
           <p className="muted" style={{ margin: 0 }}>
-            Classez les messages par famille et définissez leur ordre d'affichage.
+            {t('Classez les messages par famille et définissez leur ordre d’affichage.')}
           </p>
         </div>
       </div>
       <div className="comment-library-toolbar">
-        <input placeholder="Rechercher une famille ou un message..." value={recherche} onChange={(e) => setRecherche(e.target.value)} style={{ maxWidth: 420 }} />
+        <input placeholder={t('Rechercher une famille ou un message...')} value={recherche} onChange={(e) => setRecherche(e.target.value)} style={{ maxWidth: 420 }} />
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           <button className="secondary" onClick={() => setFamilleEditee({ nom: '', ordre: familles.length + 1 })}>
-            Créer une famille
+            {t('Créer une famille')}
           </button>
           <button className="primary" onClick={() => setModeleEdite({ familleId: familles[0]?.id, ordre: 1, texte: '' })}>
-            Créer un message
+            {t('Créer un message')}
           </button>
         </div>
       </div>
@@ -81,18 +82,18 @@ function Bibliotheque() {
         <table>
           <thead>
             <tr>
-              <th>Famille</th>
-              <th>Ordre famille</th>
-              <th>Message</th>
-              <th>Ordre message</th>
-              <th>Actions</th>
+              <th>{t('Famille')}</th>
+              <th>{t('Ordre famille')}</th>
+              <th>{t('Message')}</th>
+              <th>{t('Ordre message')}</th>
+              <th>{t('Actions')}</th>
             </tr>
           </thead>
           <tbody>
             {lignes.length === 0 && (
               <tr>
                 <td colSpan={5} className="muted">
-                  Aucun résultat.
+                  {t('Aucun résultat.')}
                 </td>
               </tr>
             )}
@@ -102,7 +103,7 @@ function Bibliotheque() {
                   <span className="comment-family-badge">{f.nom}</span>
                 </td>
                 <td>{f.ordre}</td>
-                <td className={m ? '' : 'muted'}>{m ? m.texte : 'Aucun message'}</td>
+                <td className={m ? '' : 'muted'}>{m ? m.texte : t('Aucun message')}</td>
                 <td>{m?.ordre ?? ''}</td>
                 <td>
                   <div className="order-buttons">
@@ -115,31 +116,39 @@ function Bibliotheque() {
                           ↓
                         </button>
                         <button className="secondary" onClick={() => setModeleEdite(m)}>
-                          Modifier
+                          {t('Modifier')}
                         </button>
                         <button
                           className="danger"
-                          onClick={() => window.confirm('Supprimer ce message prédéfini ?') && void executer(admin.supprimerModele(m.id))}
+                          onClick={() => window.confirm(t('Supprimer ce message prédéfini ?')) && void executer(admin.supprimerModele(m.id))}
                         >
-                          Supprimer
+                          {t('Supprimer')}
                         </button>
                       </>
                     ) : (
                       <>
-                        <button className="secondary" onClick={() => void executer(admin.deplacerFamilleCommentaire(f.id, -1))}>
+                        <button
+                          className="secondary"
+                          onClick={() => void executer(admin.deplacerFamilleCommentaire(f.id, -1))}
+                        >
                           ↑
                         </button>
-                        <button className="secondary" onClick={() => void executer(admin.deplacerFamilleCommentaire(f.id, 1))}>
+                        <button
+                          className="secondary"
+                          onClick={() => void executer(admin.deplacerFamilleCommentaire(f.id, 1))}
+                        >
                           ↓
                         </button>
                         <button className="secondary" onClick={() => setFamilleEditee(f)}>
-                          Modifier
+                          {t('Modifier')}
                         </button>
                         <button
                           className="danger"
-                          onClick={() => window.confirm(`Supprimer la famille "${f.nom}" ?`) && void executer(admin.supprimerFamilleCommentaire(f.id))}
+                          onClick={() =>
+                            window.confirm(t('Supprimer la famille « {nom} » ?', { nom: f.nom })) && void executer(admin.supprimerFamilleCommentaire(f.id))
+                          }
                         >
-                          Supprimer
+                          {t('Supprimer')}
                         </button>
                       </>
                     )}
@@ -158,7 +167,7 @@ function Bibliotheque() {
           surEnregistrer={async (nom, ordre) => {
             const ok = await executer(
               familleEditee.id ? admin.modifierFamilleCommentaire(familleEditee.id, nom, ordre) : admin.creerFamilleCommentaire(nom, ordre),
-              'Famille enregistrée',
+              t('Famille enregistrée'),
             );
             if (ok) setFamilleEditee(null);
           }}
@@ -172,7 +181,7 @@ function Bibliotheque() {
           surEnregistrer={async (familleId, ordre, texte) => {
             const ok = await executer(
               modeleEdite.id ? admin.modifierModele(modeleEdite.id, familleId, ordre, texte) : admin.creerModele(familleId, ordre, texte),
-              'Message enregistré',
+              t('Message enregistré'),
             );
             if (ok) setModeleEdite(null);
           }}
@@ -191,21 +200,28 @@ function EditionFamilleCommentaire({
   surFermer: () => void;
   surEnregistrer: (nom: string, ordre: number) => void;
 }) {
+  const { t } = useApp();
   const [nom, setNom] = useState(famille.nom ?? '');
   const [ordre, setOrdre] = useState(famille.ordre ?? 1);
   return (
-    <Modale ouverte titre="Famille de commentaires" sousTitre="Créez ou modifiez une famille et son ordre." largeur={560} surFermer={surFermer}>
+    <Modale
+      ouverte
+      titre={t('Famille de commentaires')}
+      sousTitre={t('Créez ou modifiez une famille et son ordre.')}
+      largeur={560}
+      surFermer={surFermer}
+    >
       <div className="form">
-        <label>Nom de la famille</label>
-        <input placeholder="Ex. Conformité" value={nom} onChange={(e) => setNom(e.target.value)} />
-        <label>Ordre</label>
+        <label>{t('Nom de la famille')}</label>
+        <input placeholder={t('Ex. Conformité')} value={nom} onChange={(e) => setNom(e.target.value)} />
+        <label>{t('Ordre')}</label>
         <input type="number" min={1} value={ordre} onChange={(e) => setOrdre(Number(e.target.value) || 1)} />
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 14 }}>
           <button className="secondary" onClick={surFermer}>
-            Annuler
+            {t('Annuler')}
           </button>
           <button className="primary" onClick={() => surEnregistrer(nom, ordre)}>
-            Enregistrer
+            {t('Enregistrer')}
           </button>
         </div>
       </div>
@@ -224,13 +240,20 @@ function EditionModele({
   surFermer: () => void;
   surEnregistrer: (familleId: number, ordre: number, texte: string) => void;
 }) {
+  const { t } = useApp();
   const [familleId, setFamilleId] = useState(modele.familleId ?? familles[0]?.id ?? 0);
   const [ordre, setOrdre] = useState(modele.ordre ?? 1);
   const [texte, setTexte] = useState(modele.texte ?? '');
   return (
-    <Modale ouverte titre="Message prédéfini" sousTitre="Classez le message dans une famille et définissez sa priorité." largeur={680} surFermer={surFermer}>
+    <Modale
+      ouverte
+      titre={t('Message prédéfini')}
+      sousTitre={t('Classez le message dans une famille et définissez sa priorité.')}
+      largeur={680}
+      surFermer={surFermer}
+    >
       <div className="form">
-        <label>Famille</label>
+        <label>{t('Famille')}</label>
         <select value={familleId} onChange={(e) => setFamilleId(Number(e.target.value))}>
           {familles.map((f) => (
             <option key={f.id} value={f.id}>
@@ -238,16 +261,16 @@ function EditionModele({
             </option>
           ))}
         </select>
-        <label>Ordre dans la famille</label>
+        <label>{t('Ordre dans la famille')}</label>
         <input type="number" min={1} value={ordre} onChange={(e) => setOrdre(Number(e.target.value) || 1)} />
-        <label>Message</label>
-        <textarea rows={5} placeholder="Texte du commentaire..." value={texte} onChange={(e) => setTexte(e.target.value)} />
+        <label>{t('Message')}</label>
+        <textarea rows={5} placeholder={t('Texte du commentaire...')} value={texte} onChange={(e) => setTexte(e.target.value)} />
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 14 }}>
           <button className="secondary" onClick={surFermer}>
-            Annuler
+            {t('Annuler')}
           </button>
           <button className="primary" onClick={() => surEnregistrer(familleId, ordre, texte)}>
-            Enregistrer
+            {t('Enregistrer')}
           </button>
         </div>
       </div>
@@ -256,7 +279,7 @@ function EditionModele({
 }
 
 function MessagesTableauBord() {
-  const { notifier } = useApp();
+  const { notifier, t } = useApp();
   const [messages, setMessages] = useState<Message[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [audience, setAudience] = useState('Tous');
@@ -270,12 +293,12 @@ function MessagesTableauBord() {
   }, [charger]);
 
   async function publier() {
-    if (!titre.trim() || !corps.trim()) return notifier('Complétez le titre et le message');
+    if (!titre.trim() || !corps.trim()) return notifier(t('Complétez le titre et le message'));
     try {
       await admin.publierMessage(audience, titre, corps);
       setTitre('');
       setCorps('');
-      notifier('Message publié');
+      notifier(t('Message publié'));
       await charger();
     } catch (e) {
       notifier((e as Error).message);
@@ -284,41 +307,41 @@ function MessagesTableauBord() {
 
   async function supprimer(id: number) {
     await admin.supprimerMessage(id);
-    notifier('Message supprimé');
+    notifier(t('Message supprimé'));
     await charger();
   }
 
   return (
     <div className="admin-grid">
       <div className="card form">
-        <h2>Nouveau message tableau de bord</h2>
-        <label>Audience</label>
+        <h2>{t('Nouveau message tableau de bord')}</h2>
+        <label>{t('Audience')}</label>
         <select value={audience} onChange={(e) => setAudience(e.target.value)}>
-          <option value="Tous">Tous les clients</option>
+          <option value="Tous">{t('Tous les clients')}</option>
           {clients.map((c) => (
             <option key={c.code} value={c.raisonSociale}>
               {c.raisonSociale}
             </option>
           ))}
         </select>
-        <label>Titre</label>
-        <input placeholder="Ex. Information commerciale" value={titre} onChange={(e) => setTitre(e.target.value)} />
-        <label>Message</label>
-        <textarea placeholder="Saisissez le message à afficher..." value={corps} onChange={(e) => setCorps(e.target.value)} />
+        <label>{t('Titre')}</label>
+        <input placeholder={t('Ex. Information commerciale')} value={titre} onChange={(e) => setTitre(e.target.value)} />
+        <label>{t('Message')}</label>
+        <textarea placeholder={t('Saisissez le message à afficher...')} value={corps} onChange={(e) => setCorps(e.target.value)} />
         <button className="primary" onClick={() => void publier()}>
-          Publier le message
+          {t('Publier le message')}
         </button>
       </div>
       <div className="card">
-        <h2>Messages publiés</h2>
+        <h2>{t('Messages publiés')}</h2>
         <div style={{ marginTop: 14 }}>
           {messages.map((m) => (
             <div key={m.id} className={`announcement ${m.audience === 'Tous' ? '' : 'client'}`}>
-              <b>{m.titre}</b> <span className="tag">{m.audience}</span>
+              <b>{m.titre}</b> <span className="tag">{m.audience === 'Tous' ? t('Tous') : m.audience}</span>
               <div style={{ marginTop: 5 }}>{m.corps}</div>
               <div style={{ marginTop: 8 }}>
                 <button className="danger" onClick={() => void supprimer(m.id)}>
-                  Supprimer
+                  {t('Supprimer')}
                 </button>
               </div>
             </div>

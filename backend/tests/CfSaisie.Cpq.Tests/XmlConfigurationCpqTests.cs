@@ -34,6 +34,23 @@ public class XmlConfigurationCpqTests
     }
 
     [Theory]
+    [InlineData("C", "C")]
+    [InlineData("D", "D")]
+    [InlineData(" d ", "D")]
+    public void Lire_RenvoieLaNatureDeLaDerniereValidation(string ecrite, string attendue)
+    {
+        var xml = XmlConfigurationCpq.Lire(XmlLiner.Replace("<Nature>C</Nature>", $"<Nature>{ecrite}</Nature>"));
+
+        Assert.Equal(attendue, xml.Nature);
+    }
+
+    [Fact]
+    public void Lire_SansNatureRenvoieNull()
+    {
+        Assert.Null(XmlConfigurationCpq.Lire(XmlLiner.Replace("<Nature>C</Nature>", "")).Nature);
+    }
+
+    [Theory]
     [InlineData("LC")]
     [InlineData("LGV")]
     [InlineData("LGVP")]

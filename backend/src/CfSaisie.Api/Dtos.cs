@@ -6,15 +6,22 @@ namespace CfSaisie.Api;
 
 public sealed record EnvironnementDto(string Code, string Libelle);
 
+/// <summary>Session de la personne connectée (Entra ID) : nom, compte et rôle attribué par ses groupes.</summary>
 public sealed record SessionDto(
     string Utilisateur,
     string Initiales,
+    string? Compte,
+    string Role,
     string Societe,
     IReadOnlyList<EnvironnementDto> Environnements,
     string EnvironnementParDefaut,
-    bool SuperAdministrateurDisponible);
+    IReadOnlyList<LangueDto> Langues,
+    string LangueParDefaut);
 
-public sealed record ClientDto(string Code, string RaisonSociale, string Pays, string Langue, bool EstVic)
+/// <summary>Langue active proposée dans le portail (table Langues).</summary>
+public sealed record LangueDto(string Code, string Libelle);
+
+public sealed record ClientDto(string Code, string RaisonSociale, string Pays, string? Langue, bool EstVic)
 {
     public static ClientDto De(ClientSap c) => new(c.Code, c.RaisonSociale, c.Pays, c.Langue, c.EstVic);
 }
@@ -56,6 +63,25 @@ public sealed record CreationDossierDto(SaisieDossierDto Saisie, int ProduitId, 
 public sealed record LancerConfigurateurDto(int? ProduitId, string? Environnement);
 
 public sealed record DossierLanceDto(DossierDto Dossier, LancementDto Lancement);
+
+/// <summary>Fin de configuration : nouvelle configuration à confirmer en cas de changement de produit (sinon vide).</summary>
+public sealed record DemandeFinConfigurationDto(string? ConfigId, int? ProduitId, string? Environnement);
+
+public enum IssueConfiguration
+{
+    /// <summary>Configuration terminée : la finalisation est possible.</summary>
+    Enregistree,
+    /// <summary>Configurateur fermé avant la fin : dossier « Abandonné ».</summary>
+    Abandonnee,
+    /// <summary>Nouveau produit non enregistré dans le configurateur : le dossier garde son produit et sa configuration.</summary>
+    ProduitNonChange,
+    /// <summary>Configuration déjà confirmée, ou dossier qui n'est plus en cours : rien à vérifier.</summary>
+    Inchangee,
+    /// <summary>Le Middleware n'a pas pu répondre : rien n'est abandonné.</summary>
+    Indeterminee,
+}
+
+public sealed record FinConfigurationDto(DossierDto Dossier, IssueConfiguration Issue);
 
 /// <summary>Ouverture d'une configuration existante par son ConfigId (modification ou consultation).</summary>
 public sealed record OuvertureConfigurationDto(TypeDossier Type, ActionConfigurateur Action, string? ConfigId, string? CodeClient, string? Environnement);
@@ -102,6 +128,9 @@ public sealed record DossierDto
     public string? ReferenceCommandeClient { get; init; }
     public DateOnly? DateCommande { get; init; }
     public DateOnly? DateLivraisonSouhaitee { get; init; }
+
+    /// <summary>Répertoire d'export ({ConfigId}, contenant les XML du portail et du CPQ : {ConfigId}_portailSAP.xml et {ConfigId}.xml), renseigné dans la réponse à la validation.</summary>
+    public string? FichierXml { get; init; }
 
     public static DossierDto De(Dossier d, string? devisSourceReference = null) => new()
     {

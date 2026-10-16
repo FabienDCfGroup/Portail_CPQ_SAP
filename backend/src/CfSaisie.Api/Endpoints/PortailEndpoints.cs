@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using CfSaisie.Api.Services;
 using CfSaisie.Data;
 using CfSaisie.Sap;
@@ -6,22 +7,26 @@ using Microsoft.Extensions.Options;
 
 namespace CfSaisie.Api.Endpoints;
 
-/// <summary>Routes utilisées par l'écran de création et l'ouverture des configurations existantes.</summary>
+/// <summary>Routes de l'écran de création, du suivi des commandes et de l'ouverture des configurations existantes.</summary>
 public static class PortailEndpoints
 {
     public static void MapPortail(this IEndpointRouteBuilder app)
     {
-        var api = app.MapGroup("/api");
+        // Toute personne connectée avec un rôle du portail (groupes Entra ID).
+        var api = app.MapGroup("/api").RequireAuthorization(Roles.PolitiquePortail);
 
-        api.MapGet("/session", (IOptions<OptionsMiddleware> middleware, IOptions<OptionsPortail> portail, IHostEnvironment hote) =>
+        api.MapGet("/session", async (ClaimsPrincipal utilisateur, IOptions<OptionsMiddleware> middleware, IOptions<OptionsPortail> portail, CfSaisieContext db, CancellationToken ct) =>
         {
-            var nom = portail.Value.UtilisateurSimule;
+            var langues = await db.Langues.Where(l => l.Actif).OrderBy(l => l.Ordre).Select(l => new LangueDto(l.Code, l.Libelle)).ToListAsync(ct);
+            // Français par défaut s'il est actif, sinon la première langue active.
+            var langueParDefaut = langues.Any(l => l.Code == "fr") ? "fr" : langues.FirstOrDefault()?.Code ?? "fr";
+            var nom = Roles.Nom(utilisateur);
             var initiales = string.Concat(nom.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(m => char.ToUpperInvariant(m[0]))).ToString();
             var environnements = middleware.Value.Environnements
                 .Select(e => new EnvironnementDto(e.Key.ToLowerInvariant(), e.Value.Libelle))
                 .ToList();
-            return new SessionDto(nom, initiales, portail.Value.Societe, environnements, middleware.Value.EnvironnementParDefaut,
-                Roles.SuperAdministrateurDisponible(hote));
+            return new SessionDto(nom, initiales, Roles.Compte(utilisateur), Roles.De(utilisateur)!, portail.Value.Societe, environnements,
+                middleware.Value.EnvironnementParDefaut, langues, langueParDefaut);
         });
 
         api.MapGet("/messages/tableau-bord", async (string? client, CfSaisieContext db, CancellationToken ct) =>
@@ -67,10 +72,20 @@ public static class PortailEndpoints
         // Dossiers (commandes et devis)
         var dossiers = api.MapGroup("/dossiers");
 
-        dossiers.MapGet("/{id:int}", (int id, ServiceDossiers service, CancellationToken ct) => service.LireAsync(id, ct));
+        // Suivi des commandes et devis (dossiers du portail + données de erp.Commandes).
+        dossiers.MapGet("", (ServiceSuivi service, CancellationToken ct) => service.ListerAsync(ct));
 
-        dossiers.MapPost("", (CreationDossierDto demande, ServiceDossiers service, IOptions<OptionsPortail> portail, CancellationToken ct) =>
-            service.CreerAsync(demande, portail.Value.UtilisateurSimule, ct));
+        dossiers.MapPost("/{id:int}/consulter", (int id, ServiceDossiers service, CancellationToken ct) =>
+            service.ConsulterAsync(id, ct));
+
+        // Suivi : un devis transmis devient une commande sur la même configuration (rouverte ensuite en commande).
+        dossiers.MapPost("/{id:int}/transformer-en-commande", (int id, ServiceDossiers service, ClaimsPrincipal utilisateur, CancellationToken ct) =>
+            service.TransformerEnCommandeAsync(id, Roles.Nom(utilisateur), ct));
+
+        dossiers.MapGet("/{id:int}",(int id, ServiceDossiers service, CancellationToken ct) => service.LireAsync(id, ct));
+
+        dossiers.MapPost("", (CreationDossierDto demande, ServiceDossiers service, ClaimsPrincipal utilisateur, CancellationToken ct) =>
+            service.CreerAsync(demande, Roles.Nom(utilisateur), ct));
 
         dossiers.MapPut("/{id:int}", (int id, SaisieDossierDto saisie, ServiceDossiers service, CancellationToken ct) =>
             service.MettreAJourAsync(id, saisie, ct));
@@ -82,11 +97,12 @@ public static class PortailEndpoints
         dossiers.MapGet("/{id:int}/planning", (int id, ServicePlanning service, CancellationToken ct) =>
             service.PlanningAsync(id, ct));
 
-        dossiers.MapPost("/{id:int}/configuration-enregistree", (int id, ServiceDossiers service, CancellationToken ct) =>
-            service.ConfigurationEnregistreeAsync(id, ct));
+        // Fenêtre du configurateur fermée : configuration terminée, ou dossier abandonné.
+        dossiers.MapPost("/{id:int}/fin-configuration", (int id, DemandeFinConfigurationDto demande, ServiceDossiers service, CancellationToken ct) =>
+            service.FinConfigurationAsync(id, demande, ct));
 
-        dossiers.MapPost("/{id:int}/valider", (int id, SaisieDossierDto saisie, ServiceDossiers service, CancellationToken ct) =>
-            service.ValiderAsync(id, saisie, ct));
+        dossiers.MapPost("/{id:int}/valider", (int id, SaisieDossierDto saisie, ServiceDossiers service, ClaimsPrincipal utilisateur, CancellationToken ct) =>
+            service.ValiderAsync(id, saisie, Roles.Nom(utilisateur), ct));
 
         // Configuration existante rouverte par son ConfigId (modification / consultation), sans dossier du portail.
         api.MapPost("/lancements", (OuvertureConfigurationDto demande, ServiceLancements service, CancellationToken ct) =>

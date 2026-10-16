@@ -40,12 +40,9 @@ public sealed class OptionsProfil
     public bool ModeErp { get; set; }
 }
 
-/// <summary>Utilisateur simulé tant que l'authentification réelle n'est pas branchée.</summary>
 public sealed class OptionsPortail
 {
     public const string Section = "Portail";
-
-    public string UtilisateurSimule { get; set; } = "Thomas Martin";
 
     public string Societe { get; set; } = "CF Group";
 }

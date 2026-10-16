@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.HttpOverrides;
 using System.Text.Json.Serialization;
 using CfSaisie.Api;
 using CfSaisie.Api.Endpoints;
@@ -25,14 +26,22 @@ builder.Services.AddOptions<OptionsMiddleware>()
         "Un profil propre à un environnement doit avoir un identifiant et un mot de passe (Middleware:Environnements:<code>:Profil).")
     .ValidateOnStart();
 builder.Services.Configure<OptionsPortail>(builder.Configuration.GetSection(OptionsPortail.Section));
+builder.AjouterAuthentification();
+
+// Export XML des commandes et devis validés : dossier propre à chaque environnement (poste, test, production).
+builder.Services.AddOptions<OptionsExport>()
+    .Bind(builder.Configuration.GetSection(OptionsExport.Section))
+    .Validate(o => OptionsExport.EstUtilisable(o.DossierXml),
+        "Export:DossierXml doit désigner un dossier existant et accessible en écriture (variable d'environnement Export__DossierXml sur les serveurs).")
+    .ValidateOnStart();
+builder.Services.AddScoped<ExportXmlDossier>();
 
 builder.Services.AddDbContext<CfSaisieContext>(o => o.UseSqlServer(builder.Configuration.GetConnectionString("CfSaisie")));
 
-// SAP : implémentation simulée tant que les interfaces SAP ne sont pas documentées.
-builder.Services.AddSingleton<SapSimule>();
-builder.Services.AddSingleton<ISapClientService>(sp => sp.GetRequiredService<SapSimule>());
-builder.Services.AddSingleton<ISapLogistiqueService>(sp => sp.GetRequiredService<SapSimule>());
-builder.Services.AddSingleton<ISapCommandeService>(sp => sp.GetRequiredService<SapSimule>());
+// Données ERP (clients, adresses, agences) : tables du schéma erp, alimentées par le flux ERP.
+builder.Services.AddScoped<DonneesErp>();
+builder.Services.AddScoped<ISapClientService>(sp => sp.GetRequiredService<DonneesErp>());
+builder.Services.AddScoped<ISapLogistiqueService>(sp => sp.GetRequiredService<DonneesErp>());
 
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<OpenRequestBuilder>();
@@ -49,6 +58,9 @@ builder.Services.AddScoped<LanceurConfigurateur>();
 builder.Services.AddScoped<ServiceDossiers>();
 builder.Services.AddScoped<ServiceLancements>();
 builder.Services.AddScoped<ServicePlanning>();
+builder.Services.AddScoped<ServiceSuivi>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<LangueInterface>();
 
 // API Planning CCX (n8n) : simulée tant que la clé n'est pas renseignée, ce qui n'est admis que sur le poste de développement.
 builder.Services.AddOptions<ParametresPlanningCcx>()
@@ -79,6 +91,7 @@ app.UseExceptionHandler(e => e.Run(async contexte =>
         RequeteInvalideException or DemandeLancementInvalideException or EnvironnementInconnuException => (StatusCodes.Status400BadRequest, erreur.Message),
         DossierIntrouvableException => (StatusCodes.Status404NotFound, erreur.Message),
         MiddlewareCpqException or PlanningCcxException => (StatusCodes.Status502BadGateway, erreur.Message),
+        ExportXmlException => (StatusCodes.Status500InternalServerError, erreur.Message),
         _ => (StatusCodes.Status500InternalServerError, "Erreur inattendue du serveur."),
     };
     if (statut == StatusCodes.Status502BadGateway || statut == StatusCodes.Status500InternalServerError)
@@ -93,7 +106,16 @@ using (var scope = app.Services.CreateScope())
     await InitialisationBase.InitialiserAsync(scope.ServiceProvider.GetRequiredService<CfSaisieContext>());
 }
 
+// Derrière un relais (Vite en développement, proxy en déploiement) : schéma https et IP d'origine du navigateur,
+// pour les adresses envoyées à Microsoft, le cookie sécurisé et le journal des connexions.
+app.UseForwardedHeaders(new ForwardedHeadersOptions { ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedFor });
+
+// Authentification Entra ID : cookie de session ; toutes les routes /api exigent un rôle du portail (sauf connexion/déconnexion).
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapPortail();
 app.MapAdministration();
+app.MapConnexion();
 
 app.Run();

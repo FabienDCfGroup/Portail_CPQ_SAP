@@ -24,7 +24,7 @@ const onglets: { cle: Onglet; libelle: string; superAdministrateur?: boolean }[]
 ];
 
 export function Administration() {
-  const { notifier, role } = useApp();
+  const { notifier, role, t } = useApp();
   const superAdministrateur = role === 'SuperAdministrateur';
   const [onglet, setOnglet] = useState<Onglet>('familles');
   const [familles, setFamilles] = useState<FamilleAdmin[]>([]);
@@ -66,15 +66,15 @@ export function Administration() {
   return (
     <section id="admin" className="view active">
       <div className="hero">
-        <h1>Gestion clients & produits</h1>
-        <p>Gérez séparément les familles, la création des produits, leur association aux familles et les accréditations clients.</p>
+        <h1>{t('Gestion clients & produits')}</h1>
+        <p>{t('Gérez séparément les familles, la création des produits, leur association aux familles et les accréditations clients.')}</p>
       </div>
       <div className="admin-tabs">
         {onglets
           .filter((o) => !o.superAdministrateur || superAdministrateur)
           .map((o) => (
             <button key={o.cle} className={onglet === o.cle ? 'active' : ''} onClick={() => setOnglet(o.cle)}>
-              {o.libelle}
+              {t(o.libelle)}
             </button>
           ))}
       </div>
@@ -140,28 +140,29 @@ function OngletConfigurateurs({ configurateurs, executer }: PropsOnglet) {
   const [edition, setEdition] = useState<ConfigurateurAdmin | 'nouveau' | null>(null);
   const q = recherche.trim().toLowerCase();
   const visibles = configurateurs.filter((c) => !q || [c.nom, c.productionSite ?? ''].join(' ').toLowerCase().includes(q));
+  const { t } = useApp();
 
   return (
     <Panneau
-      titre="Configurateurs"
-      description="Déclarez les configurateurs du Middleware pour pouvoir y rattacher des produits. Le nom doit être exactement le ConfiguratorName déclaré dans le Middleware."
+      titre={t('Configurateurs')}
+      description={t('Déclarez les configurateurs du Middleware pour pouvoir y rattacher des produits. Le nom doit être exactement le ConfiguratorName déclaré dans le Middleware.')}
       recherche={recherche}
       surRecherche={setRecherche}
-      placeholder="Rechercher un configurateur..."
-      bouton="Ajouter un configurateur"
+      placeholder={t('Rechercher un configurateur...')}
+      bouton={t('Ajouter un configurateur')}
       surBouton={() => setEdition('nouveau')}
     >
       {visibles.length === 0 ? (
-        <div className="muted">Aucun configurateur trouvé.</div>
+        <div className="muted">{t('Aucun configurateur trouvé.')}</div>
       ) : (
         <table>
           <thead>
             <tr>
-              <th>Configurateur (ConfiguratorName)</th>
-              <th>Site de production</th>
-              <th>Produits</th>
-              <th>Statut</th>
-              <th>Actions</th>
+              <th>{t('Configurateur (ConfiguratorName)')}</th>
+              <th>{t('Site de production')}</th>
+              <th>{t('Produits')}</th>
+              <th>{t('Statut')}</th>
+              <th>{t('Actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -170,26 +171,26 @@ function OngletConfigurateurs({ configurateurs, executer }: PropsOnglet) {
                 <td>
                   <b className="config-id">{c.nom}</b>
                 </td>
-                <td>{c.productionSite ?? <span className="muted">DEL_BRECE (par défaut)</span>}</td>
+                <td>{c.productionSite ?? <span className="muted">{t('DEL_BRECE (par défaut)')}</span>}</td>
                 <td>{c.nombreProduits}</td>
                 <td>
-                  <span className={`pill ${c.actif ? 'green' : 'red'}`}>{c.actif ? 'Actif' : 'Inactif'}</span>
+                  <span className={`pill ${c.actif ? 'green' : 'red'}`}>{c.actif ? t('Actif') : t('Inactif')}</span>
                 </td>
                 <td>
                   <div className="admin-table-actions">
-                    <button className="secondary" onClick={() => void executer(() => admin.basculerConfigurateur(c.id), 'Statut du configurateur mis à jour')}>
-                      {c.actif ? 'Désactiver' : 'Activer'}
+                    <button className="secondary" onClick={() => void executer(() => admin.basculerConfigurateur(c.id), t('Statut du configurateur mis à jour'))}>
+                      {c.actif ? t('Désactiver') : t('Activer')}
                     </button>
                     <button className="secondary" onClick={() => setEdition(c)}>
-                      Modifier
+                      {t('Modifier')}
                     </button>
                     <button
                       className="danger"
                       disabled={c.nombreProduits > 0}
-                      title={c.nombreProduits > 0 ? 'Utilisé par des produits : désactivez-le plutôt' : undefined}
-                      onClick={() => window.confirm(`Supprimer le configurateur ${c.nom} ?`) && void executer(() => admin.supprimerConfigurateur(c.id), 'Configurateur supprimé')}
+                      title={c.nombreProduits > 0 ? t('Utilisé par des produits : désactivez-le plutôt') : undefined}
+                      onClick={() => window.confirm(t('Supprimer le configurateur {nom} ?', { nom: c.nom })) && void executer(() => admin.supprimerConfigurateur(c.id), t('Configurateur supprimé'))}
                     >
-                      Supprimer
+                      {t('Supprimer')}
                     </button>
                   </div>
                 </td>
@@ -205,7 +206,7 @@ function OngletConfigurateurs({ configurateurs, executer }: PropsOnglet) {
           surEnregistrer={async (saisie) => {
             const ok = await executer(
               () => (edition === 'nouveau' ? admin.creerConfigurateur(saisie) : admin.modifierConfigurateur(edition.id, saisie)),
-              'Configurateur enregistré',
+              t('Configurateur enregistré'),
             );
             if (ok) setEdition(null);
           }}
@@ -227,35 +228,36 @@ function EditionConfigurateur({
   const [nom, setNom] = useState(configurateur?.nom ?? '');
   const [site, setSite] = useState(configurateur?.productionSite ?? '');
   const [actif, setActif] = useState(configurateur?.actif ?? true);
+  const { t } = useApp();
   return (
     <Modale
       ouverte
-      titre={configurateur ? 'Modifier le configurateur' : 'Ajouter un configurateur'}
-      sousTitre="Le nom est envoyé tel quel au Middleware (ConfiguratorName) et sert de préfixe aux ConfigId."
+      titre={configurateur ? t('Modifier le configurateur') : t('Ajouter un configurateur')}
+      sousTitre={t('Le nom est envoyé tel quel au Middleware (ConfiguratorName) et sert de préfixe aux ConfigId.')}
       largeur={620}
       surFermer={surFermer}
     >
       <div className="form">
-        <label>Nom du configurateur *</label>
-        <input className="config-id" placeholder="Ex. CHIV_Initial" value={nom} onChange={(e) => setNom(e.target.value)} />
+        <label>{t('Nom du configurateur *')}</label>
+        <input className="config-id" placeholder={t('Ex. CHIV_Initial')} value={nom} onChange={(e) => setNom(e.target.value)} />
         {configurateur && configurateur.nombreProduits > 0 && nom.trim() !== configurateur.nom && (
           <div className="erreur-ligne">
-            Ce configurateur est utilisé par {configurateur.nombreProduits} produit(s) : un nom différent de celui du Middleware empêchera leur lancement.
+            {t('Ce configurateur est utilisé par {nombre} produit(s) : un nom différent de celui du Middleware empêchera leur lancement.', { nombre: configurateur.nombreProduits })}
           </div>
         )}
-        <label>Site de production</label>
-        <input placeholder="DEL_BRECE si vide" value={site} onChange={(e) => setSite(e.target.value)} />
-        <label>Statut</label>
+        <label>{t('Site de production')}</label>
+        <input placeholder={t('DEL_BRECE si vide')} value={site} onChange={(e) => setSite(e.target.value)} />
+        <label>{t('Statut')}</label>
         <select value={actif ? 'active' : 'inactive'} onChange={(e) => setActif(e.target.value === 'active')}>
-          <option value="active">Actif</option>
-          <option value="inactive">Inactif</option>
+          <option value="active">{t('Actif')}</option>
+          <option value="inactive">{t('Inactif')}</option>
         </select>
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 14 }}>
           <button className="secondary" onClick={surFermer}>
-            Annuler
+            {t('Annuler')}
           </button>
           <button className="primary" onClick={() => surEnregistrer({ nom: nom.trim(), productionSite: site.trim() || null, actif })}>
-            Enregistrer
+            {t('Enregistrer')}
           </button>
         </div>
       </div>
@@ -269,28 +271,29 @@ function OngletFamilles({ familles, produits, executer }: PropsOnglet) {
   const [recherche, setRecherche] = useState('');
   const [edition, setEdition] = useState<FamilleAdmin | 'nouvelle' | null>(null);
   const visibles = familles.filter((f) => !recherche.trim() || f.nom.toLowerCase().includes(recherche.trim().toLowerCase()));
+  const { t } = useApp();
 
   return (
     <Panneau
-      titre="Familles de produits"
-      description="Créez, recherchez, activez, désactivez ou supprimez une famille."
+      titre={t('Familles de produits')}
+      description={t('Créez, recherchez, activez, désactivez ou supprimez une famille.')}
       recherche={recherche}
       surRecherche={setRecherche}
-      placeholder="Rechercher une famille..."
-      bouton="Créer une famille"
+      placeholder={t('Rechercher une famille...')}
+      bouton={t('Créer une famille')}
       surBouton={() => setEdition('nouvelle')}
     >
       {visibles.length === 0 ? (
-        <div className="muted">Aucune famille trouvée.</div>
+        <div className="muted">{t('Aucune famille trouvée.')}</div>
       ) : (
         <table>
           <thead>
             <tr>
-              <th>Image</th>
-              <th>Famille</th>
-              <th>Produits associés</th>
-              <th>Statut</th>
-              <th>Actions</th>
+              <th>{t('Image')}</th>
+              <th>{t('Famille')}</th>
+              <th>{t('Produits associés')}</th>
+              <th>{t('Statut')}</th>
+              <th>{t('Actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -304,26 +307,26 @@ function OngletFamilles({ familles, produits, executer }: PropsOnglet) {
                 </td>
                 <td>{f.nombreProduits}</td>
                 <td>
-                  <span className={`pill ${f.actif ? 'green' : 'red'}`}>{f.actif ? 'Actif' : 'Inactif'}</span>
+                  <span className={`pill ${f.actif ? 'green' : 'red'}`}>{f.actif ? t('Actif') : t('Inactif')}</span>
                 </td>
                 <td>
                   <div className="admin-table-actions">
-                    <button className="secondary" onClick={() => void executer(() => admin.basculerFamille(f.id), 'Statut de la famille mis à jour')}>
-                      {f.actif ? 'Désactiver' : 'Activer'}
+                    <button className="secondary" onClick={() => void executer(() => admin.basculerFamille(f.id), t('Statut de la famille mis à jour'))}>
+                      {f.actif ? t('Désactiver') : t('Activer')}
                     </button>
                     <button className="secondary" onClick={() => setEdition(f)}>
-                      Modifier
+                      {t('Modifier')}
                     </button>
                     <button
                       className="danger"
                       onClick={() => {
                         const msg = f.nombreProduits
-                          ? `Supprimer la famille ${f.nom} et ses ${f.nombreProduits} produit(s) associés ?`
-                          : `Supprimer la famille ${f.nom} ?`;
-                        if (window.confirm(msg)) void executer(() => admin.supprimerFamille(f.id), 'Famille supprimée');
+                          ? t('Supprimer la famille {nom} et ses {nombre} produit(s) associés ?', { nom: f.nom, nombre: f.nombreProduits })
+                          : t('Supprimer la famille {nom} ?', { nom: f.nom });
+                        if (window.confirm(msg)) void executer(() => admin.supprimerFamille(f.id), t('Famille supprimée'));
                       }}
                     >
-                      Supprimer
+                      {t('Supprimer')}
                     </button>
                   </div>
                 </td>
@@ -339,7 +342,7 @@ function OngletFamilles({ familles, produits, executer }: PropsOnglet) {
           surEnregistrer={async (saisie) => {
             const ok = await executer(
               () => (edition === 'nouvelle' ? admin.creerFamille(saisie) : admin.modifierFamille(edition.id, saisie)),
-              'Famille enregistrée',
+              t('Famille enregistrée'),
             );
             if (ok) setEdition(null);
           }}
@@ -351,9 +354,10 @@ function OngletFamilles({ familles, produits, executer }: PropsOnglet) {
 
 /** Saisie d'une image : URL ou fichier local converti en data URL (comme la maquette). */
 function ChampImage({ valeur, surChange }: { valeur: string; surChange: (v: string) => void }) {
+  const { t } = useApp();
   return (
     <>
-      <input placeholder="URL d'image (facultatif)" value={valeur.startsWith('data:') ? '' : valeur} onChange={(e) => surChange(e.target.value)} />
+      <input placeholder={t('URL d’image (facultatif)')} value={valeur.startsWith('data:') ? '' : valeur} onChange={(e) => surChange(e.target.value)} />
       <input
         type="file"
         accept="image/*"
@@ -375,24 +379,31 @@ function EditionFamille({ famille, surFermer, surEnregistrer }: { famille: Famil
   const [nom, setNom] = useState(famille?.nom ?? '');
   const [actif, setActif] = useState(famille?.actif ?? true);
   const [image, setImage] = useState(famille?.image ?? '');
+  const { t } = useApp();
   return (
-    <Modale ouverte titre={famille ? 'Modifier la famille' : 'Créer une famille'} sousTitre="Définissez le nom, l’image et le statut de la famille." largeur={620} surFermer={surFermer}>
+    <Modale
+      ouverte
+      titre={famille ? t('Modifier la famille') : t('Créer une famille')}
+      sousTitre={t('Définissez le nom, l’image et le statut de la famille.')}
+      largeur={620}
+      surFermer={surFermer}
+    >
       <div className="form">
-        <label>Nom de la famille</label>
-        <input placeholder="Ex. Volet hors-sol" value={nom} onChange={(e) => setNom(e.target.value)} />
-        <label>Statut</label>
+        <label>{t('Nom de la famille')}</label>
+        <input placeholder={t('Ex. Volet hors-sol')} value={nom} onChange={(e) => setNom(e.target.value)} />
+        <label>{t('Statut')}</label>
         <select value={actif ? 'active' : 'inactive'} onChange={(e) => setActif(e.target.value === 'active')}>
-          <option value="active">Actif</option>
-          <option value="inactive">Inactif</option>
+          <option value="active">{t('Actif')}</option>
+          <option value="inactive">{t('Inactif')}</option>
         </select>
-        <label>Image de la famille</label>
+        <label>{t('Image de la famille')}</label>
         <ChampImage valeur={image} surChange={setImage} />
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 14 }}>
           <button className="secondary" onClick={surFermer}>
-            Annuler
+            {t('Annuler')}
           </button>
           <button className="primary" onClick={() => surEnregistrer({ nom, actif, image: image || null })}>
-            Enregistrer
+            {t('Enregistrer')}
           </button>
         </div>
       </div>
@@ -407,29 +418,30 @@ function OngletProduits({ produits, configurateurs, executer }: PropsOnglet) {
   const [edition, setEdition] = useState<ProduitAdmin | 'nouveau' | null>(null);
   const q = recherche.trim().toLowerCase();
   const visibles = produits.filter((p) => !q || [p.nom, p.configurateur, p.lienConfigurateur ?? ''].join(' ').toLowerCase().includes(q));
+  const { t } = useApp();
 
   return (
     <Panneau
-      titre="Création de produits"
-      description="Créez et gérez les produits, leurs images et leur configurateur. L'association à une famille se fait dans l'onglet dédié."
+      titre={t('Création de produits')}
+      description={t('Créez et gérez les produits, leurs images et leur configurateur. L’association à une famille se fait dans l’onglet dédié.')}
       recherche={recherche}
       surRecherche={setRecherche}
-      placeholder="Rechercher un produit ou un configurateur..."
-      bouton="Créer un produit"
+      placeholder={t('Rechercher un produit ou un configurateur...')}
+      bouton={t('Créer un produit')}
       surBouton={() => setEdition('nouveau')}
     >
       {visibles.length === 0 ? (
-        <div className="muted">Aucun produit trouvé.</div>
+        <div className="muted">{t('Aucun produit trouvé.')}</div>
       ) : (
         <table>
           <thead>
             <tr>
-              <th>Image</th>
-              <th>Produit</th>
-              <th>Configurateur</th>
-              <th>Lien configurateur</th>
-              <th>Famille</th>
-              <th>Actions</th>
+              <th>{t('Image')}</th>
+              <th>{t('Produit')}</th>
+              <th>{t('Configurateur')}</th>
+              <th>{t('Lien configurateur')}</th>
+              <th>{t('Famille')}</th>
+              <th>{t('Actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -447,20 +459,20 @@ function OngletProduits({ produits, configurateurs, executer }: PropsOnglet) {
                 </td>
                 <td>
                   <div className="admin-table-link" title={p.lienConfigurateur ?? ''}>
-                    {p.lienConfigurateur ?? <span className="muted">Non défini</span>}
+                    {p.lienConfigurateur ?? <span className="muted">{t('Non défini')}</span>}
                   </div>
                 </td>
-                <td>{p.famille ? <span className="mini-chip">{p.famille}</span> : <span className="pill red">Non associée</span>}</td>
+                <td>{p.famille ? <span className="mini-chip">{p.famille}</span> : <span className="pill red">{t('Non associée')}</span>}</td>
                 <td>
                   <div className="admin-table-actions">
                     <button className="secondary" onClick={() => setEdition(p)}>
-                      Modifier
+                      {t('Modifier')}
                     </button>
                     <button
                       className="danger"
-                      onClick={() => window.confirm(`Supprimer le produit ${p.nom} ?`) && void executer(() => admin.supprimerProduit(p.id), 'Produit supprimé')}
+                      onClick={() => window.confirm(t('Supprimer le produit {nom} ?', { nom: p.nom })) && void executer(() => admin.supprimerProduit(p.id), t('Produit supprimé'))}
                     >
-                      Supprimer
+                      {t('Supprimer')}
                     </button>
                   </div>
                 </td>
@@ -477,7 +489,7 @@ function OngletProduits({ produits, configurateurs, executer }: PropsOnglet) {
           surEnregistrer={async (saisie) => {
             const ok = await executer(
               () => (edition === 'nouveau' ? admin.creerProduit(saisie) : admin.modifierProduit(edition.id, saisie)),
-              'Produit enregistré',
+              t('Produit enregistré'),
             );
             if (ok) setEdition(null);
           }}
@@ -503,48 +515,49 @@ function EditionProduit({
   const [lien, setLien] = useState(produit?.lienConfigurateur ?? '');
   const [description, setDescription] = useState(produit?.description ?? '');
   const [image, setImage] = useState(produit?.image ?? '');
+  const { t } = useApp();
   return (
     <Modale
       ouverte
-      titre={produit ? 'Modifier le produit' : 'Créer un produit'}
-      sousTitre="Définissez le produit, son image et son configurateur. L'association à une famille se fait séparément."
+      titre={produit ? t('Modifier le produit') : t('Créer un produit')}
+      sousTitre={t('Définissez le produit, son image et son configurateur. L’association à une famille se fait séparément.')}
       largeur={760}
       surFermer={surFermer}
     >
       <div className="form">
         <div className="catalog-form-grid">
           <div>
-            <label>Nom du produit</label>
-            <input placeholder="Ex. Rolleasy2" value={nom} onChange={(e) => setNom(e.target.value)} />
+            <label>{t('Nom du produit')}</label>
+            <input placeholder={t('Ex. Rolleasy2')} value={nom} onChange={(e) => setNom(e.target.value)} />
           </div>
           <div>
-            <label>Configurateur (Configurator Name)</label>
+            <label>{t('Configurateur (Configurator Name)')}</label>
             <select value={configurateurId} onChange={(e) => setConfigurateurId(Number(e.target.value))}>
-              <option value={0}>Choisir un configurateur</option>
+              <option value={0}>{t('Choisir un configurateur')}</option>
               {configurateurs.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.nom}
-                  {c.actif ? '' : ' — Inactif'}
+                  {c.actif ? '' : ` — ${t('Inactif')}`}
                 </option>
               ))}
             </select>
           </div>
         </div>
-        <label>Lien configurateur</label>
-        <input type="url" placeholder="https://... (facultatif, le lancement passe par le Middleware CPQ)" value={lien} onChange={(e) => setLien(e.target.value)} />
-        <label>Description</label>
-        <input placeholder="Description courte du produit" value={description} onChange={(e) => setDescription(e.target.value)} />
-        <label>Image du produit</label>
+        <label>{t('Lien configurateur')}</label>
+        <input type="url" placeholder={t('https://... (facultatif, le lancement passe par le Middleware CPQ)')} value={lien} onChange={(e) => setLien(e.target.value)} />
+        <label>{t('Description')}</label>
+        <input placeholder={t('Description courte du produit')} value={description} onChange={(e) => setDescription(e.target.value)} />
+        <label>{t('Image du produit')}</label>
         <ChampImage valeur={image} surChange={setImage} />
         <div style={{ display: 'flex', gap: 8, marginTop: 14, justifyContent: 'flex-end' }}>
           <button className="secondary" onClick={surFermer}>
-            Annuler
+            {t('Annuler')}
           </button>
           <button
             className="primary"
             onClick={() => surEnregistrer({ nom, configurateurId, lienConfigurateur: lien || null, description: description || null, image: image || null })}
           >
-            Enregistrer le produit
+            {t('Enregistrer le produit')}
           </button>
         </div>
       </div>
@@ -559,28 +572,29 @@ function OngletAssociations({ familles, produits, executer }: PropsOnglet) {
   const [edition, setEdition] = useState<{ produitId: number | null } | null>(null);
   const q = recherche.trim().toLowerCase();
   const visibles = produits.filter((p) => !q || [p.nom, p.famille ?? ''].join(' ').toLowerCase().includes(q));
+  const { t } = useApp();
 
   return (
     <Panneau
-      titre="Association famille / produit"
-      description="Classez chaque produit dans la famille correspondante."
+      titre={t('Association famille / produit')}
+      description={t('Classez chaque produit dans la famille correspondante.')}
       recherche={recherche}
       surRecherche={setRecherche}
-      placeholder="Rechercher un produit ou une famille..."
-      bouton="Lier un produit à une famille"
+      placeholder={t('Rechercher un produit ou une famille...')}
+      bouton={t('Lier un produit à une famille')}
       surBouton={() => setEdition({ produitId: null })}
     >
       {visibles.length === 0 ? (
-        <div className="muted">Aucun produit trouvé.</div>
+        <div className="muted">{t('Aucun produit trouvé.')}</div>
       ) : (
         <table>
           <thead>
             <tr>
-              <th>Image</th>
-              <th>Produit</th>
-              <th>Famille actuelle</th>
-              <th>Configurateur</th>
-              <th>Action</th>
+              <th>{t('Image')}</th>
+              <th>{t('Produit')}</th>
+              <th>{t('Famille actuelle')}</th>
+              <th>{t('Configurateur')}</th>
+              <th>{t('Action')}</th>
             </tr>
           </thead>
           <tbody>
@@ -592,11 +606,11 @@ function OngletAssociations({ familles, produits, executer }: PropsOnglet) {
                 <td>
                   <b>{p.nom}</b>
                 </td>
-                <td>{p.famille ? <span className="mini-chip">{p.famille}</span> : <span className="pill red">Non associée</span>}</td>
+                <td>{p.famille ? <span className="mini-chip">{p.famille}</span> : <span className="pill red">{t('Non associée')}</span>}</td>
                 <td>{p.configurateur}</td>
                 <td>
                   <button className="secondary" onClick={() => setEdition({ produitId: p.id })}>
-                    {p.famille ? 'Modifier l’association' : 'Associer'}
+                    {p.famille ? t('Modifier l’association') : t('Associer')}
                   </button>
                 </td>
               </tr>
@@ -611,7 +625,7 @@ function OngletAssociations({ familles, produits, executer }: PropsOnglet) {
           produits={produits}
           surFermer={() => setEdition(null)}
           surEnregistrer={async (produitId, familleId) => {
-            const ok = await executer(() => admin.associer(produitId, familleId), 'Association enregistrée');
+            const ok = await executer(() => admin.associer(produitId, familleId), t('Association enregistrée'));
             if (ok) setEdition(null);
           }}
         />
@@ -635,11 +649,17 @@ function EditionAssociation({
 }) {
   const [produitId, setProduitId] = useState<number | null>(produitInitial);
   const [familleId, setFamilleId] = useState<number | null>(produits.find((p) => p.id === produitInitial)?.familleId ?? null);
-  const { notifier } = useApp();
+  const { notifier, t } = useApp();
   return (
-    <Modale ouverte titre="Associer le produit à une famille" sousTitre="Choisissez la famille dans laquelle ranger le produit." largeur={620} surFermer={surFermer}>
+    <Modale
+      ouverte
+      titre={t('Associer le produit à une famille')}
+      sousTitre={t('Choisissez la famille dans laquelle ranger le produit.')}
+      largeur={620}
+      surFermer={surFermer}
+    >
       <div className="form">
-        <label>Produit</label>
+        <label>{t('Produit')}</label>
         <select
           value={produitId ?? ''}
           onChange={(e) => {
@@ -648,36 +668,36 @@ function EditionAssociation({
             setFamilleId(produits.find((p) => p.id === id)?.familleId ?? null);
           }}
         >
-          <option value="">Choisir un produit</option>
+          <option value="">{t('Choisir un produit')}</option>
           {produits.map((p) => (
             <option key={p.id} value={p.id}>
               {p.nom}
             </option>
           ))}
         </select>
-        <label>Famille</label>
+        <label>{t('Famille')}</label>
         <select value={familleId ?? ''} onChange={(e) => setFamilleId(e.target.value ? Number(e.target.value) : null)}>
-          <option value="">Choisir une famille</option>
+          <option value="">{t('Choisir une famille')}</option>
           {familles.map((f) => (
             <option key={f.id} value={f.id}>
               {f.nom}
-              {f.actif ? '' : ' — Inactive'}
+              {f.actif ? '' : ` — ${t('Inactive')}`}
             </option>
           ))}
         </select>
         <div style={{ display: 'flex', gap: 8, marginTop: 14, justifyContent: 'flex-end' }}>
           <button className="secondary" onClick={surFermer}>
-            Annuler
+            {t('Annuler')}
           </button>
           <button
             className="primary"
             onClick={() => {
-              if (produitId === null) return notifier('Choisissez un produit');
-              if (familleId === null) return notifier('Choisissez une famille');
+              if (produitId === null) return notifier(t('Choisissez un produit'));
+              if (familleId === null) return notifier(t('Choisissez une famille'));
               surEnregistrer(produitId, familleId);
             }}
           >
-            Enregistrer l'association
+            {t('Enregistrer l’association')}
           </button>
         </div>
       </div>
@@ -700,33 +720,67 @@ function Puces({ valeurs }: { valeurs: string[] }) {
   );
 }
 
+/** Recherche de clients ERP côté serveur (plusieurs milliers de clients), après une courte pause de frappe. */
+function useRechercheClients(recherche: string, version: number) {
+  const [resultats, setResultats] = useState<AccreditationClient[] | null>(null);
+  const [erreur, setErreur] = useState<string | null>(null);
+  useEffect(() => {
+    const q = recherche.trim();
+    if (q.length < 2) {
+      setResultats(null);
+      return;
+    }
+    let actuelle = true;
+    const minuteur = window.setTimeout(() => {
+      admin
+        .accreditations(q)
+        .then((r) => {
+          if (!actuelle) return;
+          setResultats(r);
+          setErreur(null);
+        })
+        .catch((e: Error) => actuelle && setErreur(e.message));
+    }, 300);
+    return () => {
+      actuelle = false;
+      window.clearTimeout(minuteur);
+    };
+  }, [recherche, version]);
+  return { resultats, erreur };
+}
+
 function OngletAccreditations({ familles, produits, accreditations, executer }: PropsOnglet) {
   const [recherche, setRecherche] = useState('');
-  const [client, setClient] = useState<string | null>(null);
-  const q = recherche.trim().toLowerCase();
-  const visibles = accreditations.filter((a) => !q || `${a.codeClient} ${a.raisonSociale}`.toLowerCase().includes(q));
+  const [edition, setEdition] = useState<AccreditationClient | 'nouveau' | null>(null);
+  // Relance la recherche après un enregistrement, pour afficher les droits à jour.
+  const [version, setVersion] = useState(0);
+  const { resultats, erreur } = useRechercheClients(recherche, version);
+  // Sans recherche : les clients déjà accrédités ; avec recherche : les clients ERP correspondants.
+  const visibles = resultats ?? accreditations;
+  const { t } = useApp();
 
   return (
     <Panneau
-      titre="Accréditation clients / produits"
-      description="Définissez les produits accessibles pour chaque client. Les familles accessibles sont déduites automatiquement."
+      titre={t('Accréditation clients / produits')}
+      description={t('Définissez les produits accessibles pour chaque client ERP. Sans recherche, la liste montre les clients déjà accrédités ; tapez au moins 2 caractères pour chercher parmi tous les clients.')}
       recherche={recherche}
       surRecherche={setRecherche}
-      placeholder="Rechercher un code client ou une raison sociale..."
-      bouton="Lier des produits à un client"
-      surBouton={() => setClient(accreditations[0]?.codeClient ?? null)}
+      placeholder={t('Rechercher un code client ou une raison sociale...')}
+      bouton={t('Lier des produits à un client')}
+      surBouton={() => setEdition('nouveau')}
     >
+      {erreur && <div className="erreur-ligne">{erreur}</div>}
       {visibles.length === 0 ? (
-        <div className="muted">Aucun client trouvé.</div>
+        <div className="muted">{recherche.trim().length >= 2 ? t('Aucun client ERP ne correspond.') : t('Aucun client accrédité pour le moment.')}</div>
       ) : (
         <table>
           <thead>
             <tr>
-              <th>Code client</th>
-              <th>Raison sociale</th>
-              <th>Produits autorisés</th>
-              <th>Familles accessibles</th>
-              <th>Action</th>
+              <th>{t('Code client')}</th>
+              <th>{t('Raison sociale')}</th>
+              <th>{t('Produits autorisés')}</th>
+              <th>{t('Familles accessibles')}</th>
+              <th>{t('Action')}</th>
             </tr>
           </thead>
           <tbody>
@@ -748,8 +802,8 @@ function OngletAccreditations({ familles, produits, accreditations, executer }: 
                     <Puces valeurs={fams} />
                   </td>
                   <td>
-                    <button className="secondary" onClick={() => setClient(a.codeClient)}>
-                      Gérer les accès
+                    <button className="secondary" onClick={() => setEdition(a)}>
+                      {t('Gérer les accès')}
                     </button>
                   </td>
                 </tr>
@@ -758,16 +812,18 @@ function OngletAccreditations({ familles, produits, accreditations, executer }: 
           </tbody>
         </table>
       )}
-      {client && (
+      {edition && (
         <EditionAccreditations
-          codeInitial={client}
-          accreditations={accreditations}
+          clientInitial={edition === 'nouveau' ? null : edition}
           familles={familles}
           produits={produits}
-          surFermer={() => setClient(null)}
+          surFermer={() => setEdition(null)}
           surEnregistrer={async (code, ids, nom) => {
-            const ok = await executer(() => admin.enregistrerAccreditations(code, ids), `Droits enregistrés pour ${nom}`);
-            if (ok) setClient(null);
+            const ok = await executer(() => admin.enregistrerAccreditations(code, ids), t('Droits enregistrés pour {nom}', { nom }));
+            if (ok) {
+              setEdition(null);
+              setVersion((v) => v + 1);
+            }
           }}
         />
       )}
@@ -776,92 +832,102 @@ function OngletAccreditations({ familles, produits, accreditations, executer }: 
 }
 
 function EditionAccreditations({
-  codeInitial,
-  accreditations,
+  clientInitial,
   familles,
   produits,
   surFermer,
   surEnregistrer,
 }: {
-  codeInitial: string;
-  accreditations: AccreditationClient[];
+  clientInitial: AccreditationClient | null;
   familles: FamilleAdmin[];
   produits: ProduitAdmin[];
   surFermer: () => void;
   surEnregistrer: (code: string, produits: number[], nom: string) => void;
 }) {
-  const [code, setCode] = useState(codeInitial);
-  const [coches, setCoches] = useState<number[]>(accreditations.find((a) => a.codeClient === codeInitial)?.produits ?? []);
-  const client = accreditations.find((a) => a.codeClient === code);
+  const [client, setClient] = useState<AccreditationClient | null>(clientInitial);
+  const [coches, setCoches] = useState<number[]>(clientInitial?.produits ?? []);
+  const [rechercheClient, setRechercheClient] = useState(clientInitial ? `${clientInitial.codeClient} — ${clientInitial.raisonSociale}` : '');
+  const { resultats } = useRechercheClients(client ? '' : rechercheClient, 0);
+  const { t } = useApp();
 
   const basculer = (ids: number[], coche: boolean) => setCoches((c) => (coche ? [...new Set([...c, ...ids])] : c.filter((x) => !ids.includes(x))));
 
+  function saisir(saisie: string) {
+    setRechercheClient(saisie);
+    const q = saisie.trim().toLowerCase();
+    const trouve = resultats?.find((a) => `${a.codeClient} — ${a.raisonSociale}`.toLowerCase() === q || a.codeClient.toLowerCase() === q) ?? null;
+    setClient(trouve);
+    setCoches(trouve?.produits ?? []);
+  }
+
   return (
-    <Modale ouverte titre="Accréditation du client" sousTitre="Cochez les produits accessibles à ce client." largeur={820} surFermer={surFermer}>
+    <Modale ouverte titre={t('Accréditation du client')} sousTitre={t('Cochez les produits accessibles à ce client.')} largeur={820} surFermer={surFermer}>
       <div className="form">
-        <label>Client</label>
-        <select
-          value={code}
-          onChange={(e) => {
-            setCode(e.target.value);
-            setCoches(accreditations.find((a) => a.codeClient === e.target.value)?.produits ?? []);
-          }}
-        >
-          {accreditations.map((a) => (
-            <option key={a.codeClient} value={a.codeClient}>
-              {a.raisonSociale} — {a.codeClient}
-            </option>
+        <label>{t('Client (code ou raison sociale)')}</label>
+        <input
+          list="accreditation-clients"
+          placeholder={t('Tapez au moins 2 caractères, puis choisissez le client')}
+          value={rechercheClient}
+          onChange={(e) => saisir(e.target.value)}
+        />
+        <datalist id="accreditation-clients">
+          {(resultats ?? []).map((a) => (
+            <option key={a.codeClient} value={`${a.codeClient} — ${a.raisonSociale}`} />
           ))}
-        </select>
-        <div className="permissions">
-          {familles.map((f) => {
-            const ps = produits.filter((p) => p.familleId === f.id);
-            if (!ps.length) return null;
-            const toute = ps.every((p) => coches.includes(p.id));
-            return (
-              <div key={f.id} className="rights-family">
-                <div className="rights-family-head">
-                  <b>
-                    {f.nom}
-                    {!f.actif && (
-                      <span className="pill red" style={{ marginLeft: 6 }}>
-                        Inactif
-                      </span>
-                    )}
-                  </b>
-                  <label className="form-note">
-                    <input
-                      type="checkbox"
-                      checked={toute}
-                      onChange={(e) =>
-                        basculer(
-                          ps.map((p) => p.id),
-                          e.target.checked,
-                        )
-                      }
-                    />{' '}
-                    Toute la famille
-                  </label>
-                </div>
-                <div className="rights-products">
-                  {ps.map((p) => (
-                    <label key={p.id} className="perm">
-                      <input type="checkbox" checked={coches.includes(p.id)} onChange={(e) => basculer([p.id], e.target.checked)} />
-                      <span>
-                        <b>{p.nom}</b>
-                        <br />
-                        <small className="muted">{p.configurateur}</small>
-                      </span>
+        </datalist>
+        {client ? (
+          <div className="permissions">
+            {familles.map((f) => {
+              const ps = produits.filter((p) => p.familleId === f.id);
+              if (!ps.length) return null;
+              const toute = ps.every((p) => coches.includes(p.id));
+              return (
+                <div key={f.id} className="rights-family">
+                  <div className="rights-family-head">
+                    <b>
+                      {f.nom}
+                      {!f.actif && (
+                        <span className="pill red" style={{ marginLeft: 6 }}>
+                          {t('Inactif')}
+                        </span>
+                      )}
+                    </b>
+                    <label className="form-note">
+                      <input
+                        type="checkbox"
+                        checked={toute}
+                        onChange={(e) =>
+                          basculer(
+                            ps.map((p) => p.id),
+                            e.target.checked,
+                          )
+                        }
+                      />{' '}
+                      {t('Toute la famille')}
                     </label>
-                  ))}
+                  </div>
+                  <div className="rights-products">
+                    {ps.map((p) => (
+                      <label key={p.id} className="perm">
+                        <input type="checkbox" checked={coches.includes(p.id)} onChange={(e) => basculer([p.id], e.target.checked)} />
+                        <span>
+                          <b>{p.nom}</b>
+                          <br />
+                          <small className="muted">{p.configurateur}</small>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="muted">{t('Choisissez un client dans la liste proposée pour définir ses produits.')}</p>
+        )}
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 14 }}>
-          <button className="primary" onClick={() => client && surEnregistrer(code, coches, client.raisonSociale)}>
-            Enregistrer les droits
+          <button className="primary" disabled={!client} onClick={() => client && surEnregistrer(client.codeClient, coches, client.raisonSociale)}>
+            {t('Enregistrer les droits')}
           </button>
         </div>
       </div>

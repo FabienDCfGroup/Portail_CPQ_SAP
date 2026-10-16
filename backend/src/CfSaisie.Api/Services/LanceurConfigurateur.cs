@@ -55,21 +55,33 @@ public sealed class LanceurConfigurateur(
             new ProfilMiddleware(profil.Identifiant, profil.MotDePasse ?? string.Empty, profil.ModeErp),
             env);
 
-        journal.LogInformation("Lancement {Configurateur} ({Action}, {Type}) pour {Origine} sur {Serveur}",
-            demande.Configurateur.Nom, demande.Action, demande.TypeDocument, origine, env.Serveur);
+        journal.LogInformation("Lancement {Configurateur} ({Action}, {Type}, langue {Langue}) pour {Origine} sur {Serveur}",
+            demande.Configurateur.Nom, demande.Action, demande.TypeDocument, string.IsNullOrEmpty(requete.Language) ? "par défaut" : requete.Language, origine, env.Serveur);
 
         var resultat = await middleware.OuvrirAsync(requete, env, annulation);
 
         journal.LogInformation("Réponse Middleware pour {Origine} : succès={Succes}, configId={ConfigId}, message={Message}",
             origine, resultat.Succes, resultat.ConfigId, resultat.Message);
+
+        // « No config found on Id … » : le Middleware ne connaît la configuration que si elle a été enregistrée dans le configurateur.
+        if (demande.Action != ActionConfigurateur.Creation && resultat.Message?.StartsWith("No config found", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            return resultat with
+            {
+                Message = $"La configuration {demande.ConfigId} est inconnue du Middleware : elle n'a jamais été enregistrée dans le configurateur " +
+                          $"(fenêtre fermée sans « Enregistrer », ou erreur à l'enregistrement). Elle ne peut pas être rouverte ; relancez le produit en création.",
+            };
+        }
         return resultat;
     }
 
     /// <summary>
     /// XML de fin de configuration d'un dossier (GetXmlForSite), recherché sur le site de production envoyé au lancement.
     /// </summary>
-    public async Task<ResultatXmlConfiguration> LireXmlAsync(Dossier dossier, Configurateur configurateur, string environnement, CancellationToken annulation)
+    /// <param name="configId">Configuration à lire si ce n'est pas celle du dossier (nouvelle configuration pas encore confirmée).</param>
+    public async Task<ResultatXmlConfiguration> LireXmlAsync(Dossier dossier, Configurateur configurateur, string environnement, CancellationToken annulation, string? configId = null)
     {
+        configId ??= dossier.ConfigId;
         var o = options.Value;
         var env = new EnvironnementMiddleware(o.Environnements[environnement].Serveur);
         var profil = o.ProfilDe(environnement);
@@ -77,7 +89,7 @@ public sealed class LanceurConfigurateur(
         {
             Login = profil.Identifiant,
             Password = profil.MotDePasse ?? string.Empty,
-            ConfigurationId = dossier.ConfigId,
+            ConfigurationId = configId,
             ConfiguratorName = configurateur.Nom,
             AccountId = dossier.CodeClient,
             SiteId = string.IsNullOrWhiteSpace(configurateur.ProductionSite) ? OpenRequestBuilder.ProductionSiteParDefaut : configurateur.ProductionSite,
@@ -85,11 +97,11 @@ public sealed class LanceurConfigurateur(
         };
         var resultat = await middleware.LireXmlAsync(requete, env, annulation);
         journal.LogInformation("XML de configuration pour {Dossier} ({ConfigId}) : succès={Succes}, message={Message}",
-            dossier.Reference, dossier.ConfigId, resultat.Succes, resultat.Message);
+            dossier.Reference, configId, resultat.Succes, resultat.Message);
         return resultat;
     }
 
-    /// <summary>Langue du client SAP (FR, EN, DE, NL…) convertie pour le configurateur ; vide si non gérée (ex. PT).</summary>
+    /// <summary>Code langue (fr, en, de, nl…) converti pour le configurateur ; vide si non gérée (ex. pt).</summary>
     public static LangueConfigurateur? Langue(string? codeLangue) => codeLangue?.ToUpperInvariant() switch
     {
         "FR" => LangueConfigurateur.Francais,

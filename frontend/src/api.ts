@@ -1,31 +1,100 @@
 // Accès à l'API du backend (CfSaisie.Api). Le front n'appelle jamais directement le Middleware CPQ ni SAP.
 
 export type TypeDossier = 'Commande' | 'Devis';
-export type StatutDossier = 'EnCours' | 'Envoye' | 'EnAttente' | 'AValider' | 'Validee' | 'Erreur';
+export type StatutDossier = 'EnCours' | 'Envoye' | 'EnAttente' | 'AValider' | 'Validee' | 'Erreur' | 'Abandonne';
 export type OrigineDossier = 'CreationInterne' | 'SiteInternet';
 export type ModeLivraison = 'Chez le client' | 'A saisir' | 'Retrait en agence';
-export type ActionOuverture = 'Modification' | 'Consultation';
+
+export const libellesStatut: Record<StatutDossier, string> = {
+  EnCours: 'En cours',
+  Envoye: 'Envoyé',
+  EnAttente: 'En attente',
+  AValider: 'À valider',
+  Validee: 'Validée',
+  Erreur: 'Erreur',
+  Abandonne: 'Abandonné',
+};
+
+export const libellesOrigine: Record<OrigineDossier, string> = {
+  CreationInterne: 'Création interne',
+  SiteInternet: 'Site internet',
+};
+
+/** Données de erp.Commandes (flux ERP), quand la commande y figure. */
+export interface CommandeErp {
+  numeroCommande: string;
+  statutErp: string;
+  debutProduction: string | null;
+  finProduction: string | null;
+  livraisonPrevue: string | null;
+  livraisonReelle: string | null;
+}
+
+/** Ligne du suivi des commandes et devis. */
+/** Résultat de la vérification faite à la fermeture du configurateur. */
+export type IssueConfiguration = 'Enregistree' | 'Abandonnee' | 'ProduitNonChange' | 'Inchangee' | 'Indeterminee';
+
+export interface FinConfiguration {
+  dossier: Dossier;
+  issue: IssueConfiguration;
+}
+
+export interface DossierSuivi {
+  id: number;
+  reference: string;
+  type: TypeDossier;
+  origine: OrigineDossier;
+  statut: StatutDossier;
+  dateCreation: string;
+  creePar: string;
+  codeClient: string;
+  nomClient: string;
+  referenceClient: string | null;
+  numeroSap: string | null;
+  nomProduit: string;
+  nomFamille: string;
+  configId: string | null;
+  /** Date de fin de production choisie dans le portail. */
+  dateFinProductionSaisie: string | null;
+  erp: CommandeErp | null;
+  /** Commande : devis dont elle est issue. */
+  devisSourceReference: string | null;
+  /** Devis : commande validée qui en est issue. */
+  commandeIssueReference: string | null;
+  /** Devis : commande en cours de transformation. */
+  commandeEnCoursReference: string | null;
+}
 
 export interface Environnement {
   code: string;
   libelle: string;
 }
 
+/** Personne connectée (Microsoft Entra ID) ; son rôle vient de ses groupes. */
 export interface Session {
   utilisateur: string;
   initiales: string;
+  compte: string | null;
+  role: 'Utilisateur' | 'Administrateur' | 'SuperAdministrateur';
   societe: string;
   environnements: Environnement[];
   environnementParDefaut: string;
-  /** Vrai uniquement sur le poste de développement : le rôle Super administrateur est alors proposé. */
-  superAdministrateurDisponible: boolean;
+  /** Langues actives (table Langues) : proposées dans le sélecteur et envoyées au configurateur. */
+  langues: Langue[];
+  langueParDefaut: string;
+}
+
+export interface Langue {
+  code: string;
+  libelle: string;
 }
 
 export interface Client {
   code: string;
   raisonSociale: string;
   pays: string;
-  langue: string;
+  /** Code langue ERP (FR, EN…) ; null si non renseigné. */
+  langue: string | null;
   estVic: boolean;
 }
 
@@ -36,6 +105,7 @@ export interface AdresseLivraison {
   nom: string;
   telephone: string;
   adresse: string;
+  complementAdresse: string | null;
   codePostal: string;
   ville: string;
   pays: string;
@@ -49,6 +119,7 @@ export interface ClientDetail {
 export interface Agence {
   code: string;
   libelle: string;
+  region: string | null;
 }
 
 export interface ProduitCatalogue {
@@ -126,6 +197,8 @@ export interface SaisieDossier {
 }
 
 export interface Dossier extends SaisieDossier {
+  /** Répertoire d'export créé à la validation ({ConfigId}, avec {ConfigId}_portailSAP.xml et {ConfigId}.xml). */
+  fichierXml?: string | null;
   id: number;
   reference: string;
   origine: OrigineDossier;
@@ -148,15 +221,6 @@ export interface Dossier extends SaisieDossier {
   referenceCommandeClient: string | null;
   dateCommande: string | null;
   dateLivraisonSouhaitee: string | null;
-}
-
-/** Configuration existante rouverte par son ConfigId ; le configurateur en est déduit côté serveur. */
-export interface OuvertureConfiguration {
-  type: TypeDossier;
-  action: ActionOuverture;
-  configId: string;
-  codeClient: string;
-  environnement: string;
 }
 
 export interface DossierLance {
@@ -192,10 +256,21 @@ export class ErreurApi extends Error {
   }
 }
 
-// Rôle simulé (tant que l'authentification réelle n'est pas branchée), transmis à l'API pour les écrans d'administration.
-let roleCourant = 'Utilisateur';
-export function definirRole(role: string) {
-  roleCourant = role;
+/**
+ * Session absente ou expirée : redirection vers la connexion Microsoft, puis retour sur l'écran en cours.
+ * Après un refus (aucun groupe du portail), on ne relance pas la connexion pour éviter une boucle.
+ */
+export function seConnecter(autreCompte = false) {
+  const retour = encodeURIComponent(window.location.pathname + window.location.hash);
+  window.location.href = `/api/connexion?retour=${retour}${autreCompte ? '&compte=autre' : ''}`;
+}
+
+export const connexionRefusee = () => new URLSearchParams(window.location.search).get('acces');
+
+// Langue de l'interface, transmise à chaque appel : l'API la vérifie et l'envoie au configurateur.
+let langueCourante = 'fr';
+export function definirLangueApi(langue: string) {
+  langueCourante = langue;
 }
 
 async function appeler<T>(methode: string, chemin: string, corps?: unknown): Promise<T> {
@@ -203,11 +278,16 @@ async function appeler<T>(methode: string, chemin: string, corps?: unknown): Pro
     method: methode,
     headers: {
       Accept: 'application/json',
-      'X-Role': roleCourant,
+      'Accept-Language': langueCourante,
       ...(corps !== undefined ? { 'Content-Type': 'application/json' } : {}),
     },
     body: corps !== undefined ? JSON.stringify(corps) : undefined,
   });
+  if (reponse.status === 401 && !connexionRefusee()) {
+    seConnecter();
+    // La page quitte le portail : on laisse l'appel en attente plutôt que d'afficher une erreur.
+    return new Promise<T>(() => undefined);
+  }
   if (!reponse.ok) {
     let message = `Erreur ${reponse.status}`;
     try {
@@ -244,10 +324,13 @@ export const api = {
   enregistrerDossier: (id: number, saisie: SaisieDossier) => appeler<Dossier>('PUT', `/dossiers/${id}`, saisie),
   relancerConfigurateur: (id: number, produitId: number | null, environnement: string) =>
     appeler<DossierLance>('POST', `/dossiers/${id}/configurateur`, { produitId, environnement }),
-  configurationEnregistree: (id: number) => appeler<Dossier>('POST', `/dossiers/${id}/configuration-enregistree`),
+  finConfiguration: (id: number, nouvelle?: { configId: string; produitId: number; environnement: string }) =>
+    appeler<FinConfiguration>('POST', `/dossiers/${id}/fin-configuration`, nouvelle ?? {}),
   planningDossier: (id: number) => appeler<PlanningDossier>('GET', `/dossiers/${id}/planning`),
+  suivi: () => appeler<DossierSuivi[]>('GET', '/dossiers'),
+  transformerEnCommande: (id: number) => appeler<Dossier>('POST', `/dossiers/${id}/transformer-en-commande`),
+  consulterDossier: (id: number) => appeler<DossierLance>('POST', `/dossiers/${id}/consulter`),
   validerDossier: (id: number, saisie: SaisieDossier) => appeler<Dossier>('POST', `/dossiers/${id}/valider`, saisie),
-  ouvrirConfiguration: (demande: OuvertureConfiguration) => appeler<Lancement>('POST', '/lancements', demande),
 };
 
 // ----- Administration (rôle Administrateur) -----
@@ -306,11 +389,17 @@ export interface AccreditationClient {
   produits: number[];
 }
 
-export interface Utilisateur {
+/** Ligne du journal des connexions. Résultat : Succes, RefuseSansGroupe ou Echec. */
+export interface Connexion {
   id: number;
-  nom: string;
-  role: string;
-  statut: string;
+  date: string;
+  resultat: 'Succes' | 'RefuseSansGroupe' | 'Echec';
+  compte: string | null;
+  nom: string | null;
+  role: string | null;
+  message: string | null;
+  adresseIp: string | null;
+  navigateur: string | null;
 }
 
 export const admin = {
@@ -333,7 +422,8 @@ export const admin = {
   supprimerProduit: (id: number) => appeler<ProduitAdmin[]>('DELETE', `/admin/produits/${id}`),
   associer: (id: number, familleId: number | null) => appeler<ProduitAdmin[]>('PUT', `/admin/produits/${id}/famille`, { familleId }),
 
-  accreditations: () => appeler<AccreditationClient[]>('GET', '/admin/accreditations'),
+  /** Sans recherche : clients déjà accrédités ; avec recherche : clients ERP correspondants (50 au plus). */
+  accreditations: (q?: string) => appeler<AccreditationClient[]>('GET', `/admin/accreditations${qs({ q })}`),
   enregistrerAccreditations: (code: string, produits: number[]) =>
     appeler<AccreditationClient[]>('PUT', `/admin/accreditations/${encodeURIComponent(code)}`, { produits }),
 
@@ -351,6 +441,6 @@ export const admin = {
   publierMessage: (audience: string, titre: string, corps: string) => appeler<void>('POST', '/admin/messages', { audience, titre, corps }),
   supprimerMessage: (id: number) => appeler<void>('DELETE', `/admin/messages/${id}`),
 
-  utilisateurs: () => appeler<Utilisateur[]>('GET', '/admin/utilisateurs'),
+  connexions: (filtres: { q?: string; resultat?: string; du?: string; au?: string }) => appeler<Connexion[]>('GET', `/admin/connexions${qs(filtres)}`),
 };
 

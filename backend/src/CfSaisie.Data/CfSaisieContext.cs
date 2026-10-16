@@ -12,7 +12,8 @@ public class CfSaisieContext(DbContextOptions<CfSaisieContext> options) : DbCont
     public DbSet<CommentaireFamille> CommentaireFamilles => Set<CommentaireFamille>();
     public DbSet<CommentaireModele> CommentaireModeles => Set<CommentaireModele>();
     public DbSet<MessageTableauBord> Messages => Set<MessageTableauBord>();
-    public DbSet<Utilisateur> Utilisateurs => Set<Utilisateur>();
+    public DbSet<JournalConnexion> JournalConnexions => Set<JournalConnexion>();
+    public DbSet<Langue> Langues => Set<Langue>();
 
     // Schéma « erp » : alimenté par l'ERP, en lecture seule pour le portail.
     public DbSet<ClientErp> ClientsErp => Set<ClientErp>();
@@ -76,7 +77,34 @@ public class CfSaisieContext(DbContextOptions<CfSaisieContext> options) : DbCont
         modele.Entity<CommentaireModele>(e =>
             e.HasOne(x => x.Famille).WithMany(f => f.Modeles).OnDelete(DeleteBehavior.Cascade));
 
-        modele.Entity<Utilisateur>(e => e.Property(x => x.Nom).HasMaxLength(100));
+        modele.Entity<JournalConnexion>(e =>
+        {
+            e.ToTable("JournalConnexions");
+            e.Property(x => x.Resultat).HasMaxLength(30);
+            e.Property(x => x.ObjetId).HasMaxLength(50);
+            e.Property(x => x.Compte).HasMaxLength(256);
+            e.Property(x => x.Nom).HasMaxLength(200);
+            e.Property(x => x.Role).HasMaxLength(30);
+            e.Property(x => x.Message).HasMaxLength(500);
+            e.Property(x => x.AdresseIp).HasMaxLength(64);
+            e.Property(x => x.Navigateur).HasMaxLength(512);
+            e.HasIndex(x => x.Date);
+            e.HasIndex(x => x.Compte);
+        });
+
+        modele.Entity<Langue>(e =>
+        {
+            e.HasKey(x => x.Code);
+            e.Property(x => x.Code).HasMaxLength(5);
+            e.Property(x => x.Libelle).HasMaxLength(50);
+            // Langues initiales : celles gérées par les configurateurs, PT désactivée (aucun configurateur traduit en portugais).
+            e.HasData(
+                new Langue { Code = "fr", Libelle = "Français", Actif = true, Ordre = 1 },
+                new Langue { Code = "en", Libelle = "English", Actif = true, Ordre = 2 },
+                new Langue { Code = "de", Libelle = "Deutsch", Actif = true, Ordre = 3 },
+                new Langue { Code = "nl", Libelle = "Nederlands", Actif = true, Ordre = 4 },
+                new Langue { Code = "pt", Libelle = "Português", Actif = false, Ordre = 5 });
+        });
 
         ConfigurerErp(modele);
     }

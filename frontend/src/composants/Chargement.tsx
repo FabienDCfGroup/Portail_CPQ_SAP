@@ -63,10 +63,10 @@ export function EcranChargement({ titre, texte }: { titre: string; texte?: strin
  * Affiche la page d'attente dans la fenêtre du configurateur. Si cette fenêtre montre encore un configurateur
  * précédent (autre origine), le navigateur interdit d'y écrire : elle est alors simplement réutilisée, puis redirigée.
  */
-export function afficherAttente(fenetre: Window, titre: string) {
+export function afficherAttente(fenetre: Window, titre: string, texte: string) {
   try {
     fenetre.document.open();
-    fenetre.document.write(pageAttenteConfigurateur(titre));
+    fenetre.document.write(pageAttenteConfigurateur(titre, texte));
     fenetre.document.close();
   } catch {
     // Fenêtre d'une autre origine (configurateur déjà ouvert) : pas de page d'attente.
@@ -78,10 +78,11 @@ export function afficherAttente(fenetre: Window, titre: string) {
  * Page d'attente écrite dans la fenêtre du configurateur, le temps que le Middleware réponde.
  * L'URL du logo est rendue absolue : la fenêtre (about:blank) ne résout pas les chemins du portail de la même façon.
  */
-export function pageAttenteConfigurateur(titre: string, texte = 'Le Middleware CPQ prépare la session') {
+export function pageAttenteConfigurateur(titre: string, texte: string) {
   const urlLogo = new URL(logo, window.location.href).href;
   const sombre = document.body.classList.contains('dark') ? ' class="dark"' : '';
-  return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>CF Configurator</title><style>body{margin:0}${style}</style></head>
+  const langue = document.documentElement.lang || 'fr';
+  return `<!doctype html><html lang="${langue}"><head><meta charset="utf-8"><title>CF Configurator</title><style>body{margin:0}${style}</style></head>
 <body${sombre}><div class="chargement" role="status"><div>${scene(urlLogo)}
 <p class="chargement-titre">${echapper(titre)}</p>
 <p class="chargement-texte"><span class="chargement-points">${echapper(texte)}</span></p></div></div></body></html>`;

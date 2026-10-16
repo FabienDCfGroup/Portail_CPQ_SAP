@@ -12,3 +12,6 @@ TestResults/
 # Node / React (frontend)
 node_modules/
 dist/
+
+# Certificat HTTPS de développement (clé privée) exporté pour Vite : jamais dans Git
+frontend/.certificats/

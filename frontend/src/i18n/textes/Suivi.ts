@@ -1,0 +1,201 @@
+import type { Traductions } from '..';
+
+const textes: Traductions = {
+  en: {
+    'Abandonné':
+      'Abandoned',
+    'Commande {commande} créée à partir du devis {devis} : ouvrez la configuration en commande puis validez-la.':
+      'Order {commande} created from quote {devis}: open the configuration as an order, then validate it.',
+    'Commande issue du devis':
+      'Order created from the quote',
+    'Reprendre la commande {commande}, en cours de transformation':
+      'Resume order {commande}, conversion in progress',
+    'Reprendre la transformation':
+      'Resume conversion',
+    'Transformer en commande':
+      'Convert to order',
+    'issue du devis {devis}':
+      'from quote {devis}',
+    'Autorisez les fenêtres popup pour ouvrir le configurateur.': 'Allow pop-up windows to open the configurator.',
+    '{configId} — consultation': '{configId} — view only',
+    'Le Middleware CPQ prépare la session': 'The CPQ Middleware is preparing the session',
+    'Consultation impossible': 'Unable to open in view-only mode',
+    'Ouvrir': 'Open',
+    'Ouvrir pour validation': 'Open for validation',
+    'Ouvrir la configuration en consultation': 'Open the configuration in view-only mode',
+    'Consulter': 'View',
+    'Origine des commandes': 'Order origin',
+    'Les commandes peuvent être créées dans CF Saisie commandes ({creationInterne}) ou intégrées depuis un autre processus, par exemple le {siteInternet}.':
+      'Orders can be created in CF Saisie commandes ({creationInterne}) or imported from another process, for example the {siteInternet}.',
+    'Création interne': 'Internal creation',
+    'Site internet': 'Website',
+    'Les colonnes ERP (statut, production, livraison) se remplissent dès que l’ERP a transmis la commande.':
+      'The ERP columns (status, production, delivery) are filled in as soon as the ERP has transmitted the order.',
+    'Suivi des commandes': 'Order tracking',
+    'Filtrez les commandes et devis, rouvrez un dossier en cours ou consultez la configuration d’un dossier transmis.':
+      'Filter orders and quotes, reopen a file in progress or view the configuration of a submitted file.',
+    'Référence, client, produit, n° SAP...': 'Reference, customer, product, SAP no....',
+    'Commande et/ou devis': 'Order and/or quote',
+    'Commande': 'Order',
+    'Devis': 'Quote',
+    'Tous les statuts': 'All statuses',
+    'En cours': 'In progress',
+    'Envoyé': 'Sent',
+    'En attente': 'Pending',
+    'À valider': 'To be validated',
+    'Validée': 'Validated',
+    'Erreur': 'Error',
+    'Toutes les familles': 'All families',
+    'Type': 'Type',
+    'Origine': 'Origin',
+    'Date de création': 'Creation date',
+    'Créé par': 'Created by',
+    'Code client': 'Customer code',
+    'Nom client': 'Customer name',
+    'Référence client': 'Customer reference',
+    'N° commande SAP': 'SAP order no.',
+    'Statut': 'Status',
+    'Statut ERP': 'ERP status',
+    'Fin de prod': 'End of prod.',
+    'Livraison prévue': 'Planned delivery',
+    'Livraison réelle': 'Actual delivery',
+    'Action': 'Action',
+    'Date ERP': 'ERP date',
+    'Date choisie dans le portail': 'Date chosen in the portal',
+    'Aucune commande ni aucun devis pour le moment.': 'No orders or quotes yet.',
+    'Aucun dossier ne correspond aux filtres.': 'No file matches the filters.',
+    'Chargement du suivi…': 'Loading tracking…',
+  },
+  de: {
+    'Abandonné':
+      'Abgebrochen',
+    'Commande {commande} créée à partir du devis {devis} : ouvrez la configuration en commande puis validez-la.':
+      'Auftrag {commande} aus Angebot {devis} erstellt: Öffnen Sie die Konfiguration als Auftrag und bestätigen Sie sie.',
+    'Commande issue du devis':
+      'Aus dem Angebot erstellter Auftrag',
+    'Reprendre la commande {commande}, en cours de transformation':
+      'Auftrag {commande} fortsetzen (Umwandlung läuft)',
+    'Reprendre la transformation':
+      'Umwandlung fortsetzen',
+    'Transformer en commande':
+      'In Auftrag umwandeln',
+    'issue du devis {devis}':
+      'aus Angebot {devis}',
+    'Autorisez les fenêtres popup pour ouvrir le configurateur.': 'Erlauben Sie Pop-up-Fenster, um den Konfigurator zu öffnen.',
+    '{configId} — consultation': '{configId} — Ansicht',
+    'Le Middleware CPQ prépare la session': 'Die CPQ-Middleware bereitet die Sitzung vor',
+    'Consultation impossible': 'Ansicht nicht möglich',
+    'Ouvrir': 'Öffnen',
+    'Ouvrir pour validation': 'Zur Freigabe öffnen',
+    'Ouvrir la configuration en consultation': 'Konfiguration in der Ansicht öffnen',
+    'Consulter': 'Ansehen',
+    'Origine des commandes': 'Herkunft der Aufträge',
+    'Les commandes peuvent être créées dans CF Saisie commandes ({creationInterne}) ou intégrées depuis un autre processus, par exemple le {siteInternet}.':
+      'Aufträge können in CF Saisie commandes erstellt ({creationInterne}) oder aus einem anderen Prozess übernommen werden, zum Beispiel über die {siteInternet}.',
+    'Création interne': 'Interne Erstellung',
+    'Site internet': 'Website',
+    'Les colonnes ERP (statut, production, livraison) se remplissent dès que l’ERP a transmis la commande.':
+      'Die ERP-Spalten (Status, Produktion, Lieferung) werden gefüllt, sobald das ERP den Auftrag übermittelt hat.',
+    'Suivi des commandes': 'Auftragsverfolgung',
+    'Filtrez les commandes et devis, rouvrez un dossier en cours ou consultez la configuration d’un dossier transmis.':
+      'Filtern Sie Aufträge und Angebote, öffnen Sie einen laufenden Vorgang erneut oder sehen Sie sich die Konfiguration eines übermittelten Vorgangs an.',
+    'Référence, client, produit, n° SAP...': 'Referenz, Kunde, Produkt, SAP-Nr....',
+    'Commande et/ou devis': 'Auftrag und/oder Angebot',
+    'Commande': 'Auftrag',
+    'Devis': 'Angebot',
+    'Tous les statuts': 'Alle Status',
+    'En cours': 'In Bearbeitung',
+    'Envoyé': 'Gesendet',
+    'En attente': 'Ausstehend',
+    'À valider': 'Freizugeben',
+    'Validée': 'Freigegeben',
+    'Erreur': 'Fehler',
+    'Toutes les familles': 'Alle Familien',
+    'Type': 'Typ',
+    'Origine': 'Herkunft',
+    'Date de création': 'Erstellungsdatum',
+    'Créé par': 'Erstellt von',
+    'Code client': 'Kundennummer',
+    'Nom client': 'Kundenname',
+    'Référence client': 'Kundenreferenz',
+    'N° commande SAP': 'SAP-Auftragsnr.',
+    'Statut': 'Status',
+    'Statut ERP': 'ERP-Status',
+    'Fin de prod': 'Prod.-Ende',
+    'Livraison prévue': 'Geplante Lieferung',
+    'Livraison réelle': 'Tatsächliche Lieferung',
+    'Action': 'Aktion',
+    'Date ERP': 'ERP-Datum',
+    'Date choisie dans le portail': 'Im Portal gewähltes Datum',
+    'Aucune commande ni aucun devis pour le moment.': 'Noch keine Aufträge oder Angebote vorhanden.',
+    'Aucun dossier ne correspond aux filtres.': 'Kein Vorgang entspricht den Filtern.',
+    'Chargement du suivi…': 'Auftragsverfolgung wird geladen…',
+  },
+  nl: {
+    'Abandonné':
+      'Afgebroken',
+    'Commande {commande} créée à partir du devis {devis} : ouvrez la configuration en commande puis validez-la.':
+      'Order {commande} aangemaakt op basis van offerte {devis}: open de configuratie als order en valideer deze.',
+    'Commande issue du devis':
+      'Order op basis van de offerte',
+    'Reprendre la commande {commande}, en cours de transformation':
+      'Order {commande} hervatten (omzetting bezig)',
+    'Reprendre la transformation':
+      'Omzetting hervatten',
+    'Transformer en commande':
+      'Omzetten in order',
+    'issue du devis {devis}':
+      'uit offerte {devis}',
+    'Autorisez les fenêtres popup pour ouvrir le configurateur.': 'Sta pop-upvensters toe om de configurator te openen.',
+    '{configId} — consultation': '{configId} — raadplegen',
+    'Le Middleware CPQ prépare la session': 'De CPQ-middleware bereidt de sessie voor',
+    'Consultation impossible': 'Raadplegen niet mogelijk',
+    'Ouvrir': 'Openen',
+    'Ouvrir pour validation': 'Openen ter validatie',
+    'Ouvrir la configuration en consultation': 'De configuratie openen om te raadplegen',
+    'Consulter': 'Raadplegen',
+    'Origine des commandes': 'Herkomst van de orders',
+    'Les commandes peuvent être créées dans CF Saisie commandes ({creationInterne}) ou intégrées depuis un autre processus, par exemple le {siteInternet}.':
+      'Orders kunnen in CF Saisie commandes worden aangemaakt ({creationInterne}) of vanuit een ander proces worden geïmporteerd, bijvoorbeeld via de {siteInternet}.',
+    'Création interne': 'Interne aanmaak',
+    'Site internet': 'Website',
+    'Les colonnes ERP (statut, production, livraison) se remplissent dès que l’ERP a transmis la commande.':
+      'De ERP-kolommen (status, productie, levering) worden ingevuld zodra het ERP de order heeft doorgegeven.',
+    'Suivi des commandes': 'Orderopvolging',
+    'Filtrez les commandes et devis, rouvrez un dossier en cours ou consultez la configuration d’un dossier transmis.':
+      'Filter orders en offertes, heropen een lopend dossier of raadpleeg de configuratie van een verzonden dossier.',
+    'Référence, client, produit, n° SAP...': 'Referentie, klant, product, SAP-nr....',
+    'Commande et/ou devis': 'Order en/of offerte',
+    'Commande': 'Order',
+    'Devis': 'Offerte',
+    'Tous les statuts': 'Alle statussen',
+    'En cours': 'In behandeling',
+    'Envoyé': 'Verzonden',
+    'En attente': 'In afwachting',
+    'À valider': 'Te valideren',
+    'Validée': 'Gevalideerd',
+    'Erreur': 'Fout',
+    'Toutes les familles': 'Alle families',
+    'Type': 'Type',
+    'Origine': 'Herkomst',
+    'Date de création': 'Aanmaakdatum',
+    'Créé par': 'Aangemaakt door',
+    'Code client': 'Klantcode',
+    'Nom client': 'Klantnaam',
+    'Référence client': 'Klantreferentie',
+    'N° commande SAP': 'SAP-ordernr.',
+    'Statut': 'Status',
+    'Statut ERP': 'ERP-status',
+    'Fin de prod': 'Einde prod.',
+    'Livraison prévue': 'Geplande levering',
+    'Livraison réelle': 'Werkelijke levering',
+    'Action': 'Actie',
+    'Date ERP': 'ERP-datum',
+    'Date choisie dans le portail': 'In het portaal gekozen datum',
+    'Aucune commande ni aucun devis pour le moment.': 'Nog geen orders of offertes.',
+    'Aucun dossier ne correspond aux filtres.': 'Geen dossier voldoet aan de filters.',
+    'Chargement du suivi…': 'Orderopvolging wordt geladen…',
+  },
+};
+
+export default textes;

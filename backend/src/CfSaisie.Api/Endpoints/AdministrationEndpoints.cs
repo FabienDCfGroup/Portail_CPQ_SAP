@@ -19,29 +19,23 @@ public sealed record CommentaireFamilleSaisieDto(string? Nom, int Ordre);
 public sealed record CommentaireModeleSaisieDto(int FamilleId, int Ordre, string? Texte);
 public sealed record DeplacementDto(int Sens);
 public sealed record MessageSaisieDto(string? Audience, string? Titre, string? Corps);
-public sealed record UtilisateurDto(int Id, string Nom, string Role, string Statut);
+public sealed record ConnexionDto(long Id, DateTime Date, string Resultat, string? Compte, string? Nom, string? Role, string? Message, string? AdresseIp, string? Navigateur);
 
 /// <summary>
-/// Écrans d'administration (rôle Administrateur) : catalogue, accréditations, messages, utilisateurs.
+/// Écrans d'administration (rôle Administrateur) : catalogue, accréditations, messages, journal des connexions.
 /// La gestion des configurateurs est réservée au super administrateur.
 /// </summary>
 public static class AdministrationEndpoints
 {
     public static void MapAdministration(this IEndpointRouteBuilder app)
     {
-        var admin = app.MapGroup("/api/admin").AddEndpointFilter(async (contexte, suivant) =>
-            Roles.EstAdministrateur(contexte.HttpContext)
-                ? await suivant(contexte)
-                : Results.Problem("Fonction réservée au rôle Administrateur.", statusCode: StatusCodes.Status403Forbidden));
+        var admin = app.MapGroup("/api/admin").RequireAuthorization(Roles.PolitiqueAdministration);
 
         // ----- Configurateurs : lecture pour l'administrateur (choix du configurateur d'un produit) -----
         admin.MapGet("/configurateurs", ListerConfigurateurs);
 
         // Écriture réservée au super administrateur : le nom doit être celui déclaré dans le Middleware.
-        var configurateurs = admin.MapGroup("/configurateurs").AddEndpointFilter(async (contexte, suivant) =>
-            Roles.EstSuperAdministrateur(contexte.HttpContext)
-                ? await suivant(contexte)
-                : Results.Problem("Fonction réservée au rôle Super administrateur.", statusCode: StatusCodes.Status403Forbidden));
+        var configurateurs = admin.MapGroup("/configurateurs").RequireAuthorization(Roles.PolitiqueConfigurateurs);
 
         configurateurs.MapPost("", async (ConfigurateurSaisieDto s, CfSaisieContext db, CancellationToken ct) =>
         {
@@ -175,17 +169,18 @@ public static class AdministrationEndpoints
         });
 
         // ----- Accréditations clients / produits -----
-        admin.MapGet("/accreditations", ListerAccreditations);
+        admin.MapGet("/accreditations", (string? q, CfSaisieContext db, ISapClientService sap, CancellationToken ct) =>
+            ListerAccreditations(q, db, sap, ct));
 
         admin.MapPut("/accreditations/{code}", async (string code, AccreditationSaisieDto s, CfSaisieContext db, ISapClientService sap, CancellationToken ct) =>
         {
-            if (await sap.LireAsync(code, ct) is null) throw new RequeteInvalideException($"Client {code} introuvable dans SAP.");
+            if (await sap.LireAsync(code, ct) is null) throw new RequeteInvalideException($"Client {code} introuvable dans les données ERP.");
             var existantes = await db.Accreditations.Where(a => a.CodeClient == code).ToListAsync(ct);
             db.Accreditations.RemoveRange(existantes);
             var produits = await db.Produits.Where(p => s.Produits.Contains(p.Id)).Select(p => p.Id).ToListAsync(ct);
             db.Accreditations.AddRange(produits.Select(p => new Accreditation { CodeClient = code, ProduitId = p }));
             await db.SaveChangesAsync(ct);
-            return await ListerAccreditations(db, sap, ct);
+            return await ListerAccreditations(null, db, sap, ct);
         });
 
         // ----- Bibliothèque de commentaires -----
@@ -282,9 +277,23 @@ public static class AdministrationEndpoints
             return Results.NoContent();
         });
 
-        // ----- Utilisateurs -----
-        admin.MapGet("/utilisateurs", async (CfSaisieContext db, CancellationToken ct) =>
-            await db.Utilisateurs.OrderBy(u => u.Id).Select(u => new UtilisateurDto(u.Id, u.Nom, u.Role, u.Statut)).ToListAsync(ct));
+        // ----- Journal des connexions (les utilisateurs viennent d'Entra ID, seules leurs connexions sont tracées) -----
+        admin.MapGet("/connexions", async (string? q, string? resultat, DateOnly? du, DateOnly? au, CfSaisieContext db, CancellationToken ct) =>
+        {
+            var requete = db.JournalConnexions.AsNoTracking();
+            if (!string.IsNullOrWhiteSpace(q))
+            {
+                var texte = q.Trim();
+                requete = requete.Where(j => (j.Nom != null && j.Nom.Contains(texte)) || (j.Compte != null && j.Compte.Contains(texte)));
+            }
+            if (!string.IsNullOrWhiteSpace(resultat)) requete = requete.Where(j => j.Resultat == resultat);
+            if (du is { } d) requete = requete.Where(j => j.Date >= d.ToDateTime(TimeOnly.MinValue));
+            if (au is { } a) requete = requete.Where(j => j.Date < a.AddDays(1).ToDateTime(TimeOnly.MinValue));
+            // Les 500 connexions les plus récentes correspondant aux filtres.
+            return await requete.OrderByDescending(j => j.Date).Take(500)
+                .Select(j => new ConnexionDto(j.Id, j.Date, j.Resultat, j.Compte, j.Nom, j.Role, j.Message, j.AdresseIp, j.Navigateur))
+                .ToListAsync(ct);
+        });
     }
 
     private static async Task<List<FamilleDto>> ListerFamilles(CfSaisieContext db, CancellationToken ct) =>
@@ -296,10 +305,28 @@ public static class AdministrationEndpoints
                 p.Famille != null ? p.Famille.Nom : null))
             .ToListAsync(ct);
 
-    private static async Task<List<AccreditationClientDto>> ListerAccreditations(CfSaisieContext db, ISapClientService sap, CancellationToken ct)
+    /// <summary>
+    /// Sans recherche : les clients qui ont au moins une accréditation. Avec recherche : les clients ERP correspondants
+    /// (50 au plus), pour en accréditer de nouveaux. La liste complète (plusieurs milliers de clients) n'est jamais chargée.
+    /// </summary>
+    private static async Task<List<AccreditationClientDto>> ListerAccreditations(string? q, CfSaisieContext db, ISapClientService sap, CancellationToken ct)
     {
-        var clients = await sap.RechercherAsync(null, 500, ct);
-        var accreditations = await db.Accreditations.ToListAsync(ct);
+        List<(string Code, string RaisonSociale)> clients;
+        if (string.IsNullOrWhiteSpace(q))
+        {
+            var codes = await db.Accreditations.Select(a => a.CodeClient).Distinct().ToListAsync(ct);
+            var noms = await db.ClientsErp.Where(c => codes.Contains(c.CodeClient)).ToDictionaryAsync(c => c.CodeClient, c => c.RaisonSociale, ct);
+            clients = codes
+                .Select(c => (c, noms.GetValueOrDefault(c) ?? "(client absent des données ERP)"))
+                .OrderBy(c => c.Item2).ToList();
+        }
+        else
+        {
+            clients = (await sap.RechercherAsync(q, 50, ct)).Select(c => (c.Code, c.RaisonSociale)).ToList();
+        }
+
+        var codesAffiches = clients.Select(c => c.Code).ToList();
+        var accreditations = await db.Accreditations.Where(a => codesAffiches.Contains(a.CodeClient)).ToListAsync(ct);
         return clients
             .Select(c => new AccreditationClientDto(c.Code, c.RaisonSociale, accreditations.Where(a => a.CodeClient == c.Code).Select(a => a.ProduitId).ToList()))
             .ToList();

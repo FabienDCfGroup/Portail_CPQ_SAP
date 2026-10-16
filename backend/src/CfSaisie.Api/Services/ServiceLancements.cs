@@ -9,7 +9,7 @@ namespace CfSaisie.Api.Services;
 /// Ouverture d'une configuration existante à partir de son ConfigId (modification ou consultation),
 /// comme le champ ConfigId de l'ancien outil. Rien n'est enregistré dans la base du portail.
 /// </summary>
-public sealed class ServiceLancements(CfSaisieContext db, ISapClientService clients, LanceurConfigurateur lanceur)
+public sealed class ServiceLancements(CfSaisieContext db, ISapClientService clients, LanceurConfigurateur lanceur, LangueInterface langue)
 {
     public async Task<LancementDto> OuvrirAsync(OuvertureConfigurationDto demande, CancellationToken annulation)
     {
@@ -22,7 +22,7 @@ public sealed class ServiceLancements(CfSaisieContext db, ISapClientService clie
         if (string.IsNullOrEmpty(configId)) throw new RequeteInvalideException("Saisissez le ConfigId de la configuration.");
         if (string.IsNullOrWhiteSpace(demande.CodeClient)) throw new RequeteInvalideException("Saisissez le code client.");
         var client = await clients.LireAsync(demande.CodeClient.Trim(), annulation)
-            ?? throw new RequeteInvalideException($"Client {demande.CodeClient.Trim()} introuvable dans SAP.");
+            ?? throw new RequeteInvalideException($"Client {demande.CodeClient.Trim()} introuvable dans les données ERP.");
 
         var configurateurs = await db.Configurateurs.AsNoTracking().ToListAsync(annulation);
         var nom = ConfigIdCpq.Configurateur(configId, configurateurs.Select(c => c.Nom))
@@ -42,7 +42,8 @@ public sealed class ServiceLancements(CfSaisieContext db, ISapClientService clie
             Configurateur = new ConfigurateurCpq(configurateur.Nom, configurateur.ProductionSite),
             CodeClient = client.Code,
             ConfigId = configId,
-            Langue = LanceurConfigurateur.Langue(client.Langue),
+            // Langue de l'interface du portail (la langue du client ERP n'est plus utilisée).
+            Langue = await langue.PourConfigurateurAsync(annulation),
         };
         var resultat = await lanceur.LancerAsync(lancement, lanceur.Resoudre(demande.Environnement), configId, annulation);
         return new LancementDto(resultat.Succes, resultat.PeutOuvrir, resultat.Message, resultat.Url, resultat.ConfigId);

@@ -62,6 +62,8 @@ public enum StatutDossier
     AValider,
     Validee,
     Erreur,
+    /// <summary>Configurateur fermé avant la fin de la configuration : dossier conservé pour trace, masqué du suivi.</summary>
+    Abandonne,
 }
 
 public enum OrigineDossier
@@ -165,10 +167,46 @@ public class MessageTableauBord
     public DateTime DateCreation { get; set; }
 }
 
-public class Utilisateur
+/// <summary>
+/// Journal des connexions au portail (authentification Microsoft Entra ID) : qui, quand, avec quel rôle, et les refus.
+/// Les utilisateurs eux-mêmes ne sont pas stockés : ils viennent de l'annuaire.
+/// </summary>
+public class JournalConnexion
 {
-    public int Id { get; set; }
-    public string Nom { get; set; } = string.Empty;
-    public string Role { get; set; } = "Utilisateur";
-    public string Statut { get; set; } = "Actif";
+    public long Id { get; set; }
+    public DateTime Date { get; set; }
+
+    /// <summary>Résultat : « Succes », « RefuseSansGroupe » (aucun groupe du portail) ou « Echec » (erreur d'authentification).</summary>
+    public string Resultat { get; set; } = string.Empty;
+
+    /// <summary>Identifiant d'objet Entra ID (oid) ; null si l'authentification a échoué avant de connaître l'utilisateur.</summary>
+    public string? ObjetId { get; set; }
+
+    /// <summary>Compte de connexion (UPN, ex. prenom.nom@cf.group).</summary>
+    public string? Compte { get; set; }
+
+    public string? Nom { get; set; }
+
+    /// <summary>Rôle attribué par les groupes (Utilisateur, Administrateur, SuperAdministrateur).</summary>
+    public string? Role { get; set; }
+
+    public string? Message { get; set; }
+    public string? AdresseIp { get; set; }
+    public string? Navigateur { get; set; }
+}
+
+/// <summary>
+/// Langue de l'interface, aussi envoyée au configurateur. Une langue désactivée n'est plus proposée.
+/// Les configurateurs gèrent FR, EN, DE et NL ; PT est présente mais désactivée (aucun configurateur traduit).
+/// </summary>
+public class Langue
+{
+    /// <summary>Code ISO 639-1 en minuscules (fr, en, de, nl, pt).</summary>
+    public string Code { get; set; } = string.Empty;
+
+    /// <summary>Nom de la langue dans cette langue (Français, English…).</summary>
+    public string Libelle { get; set; } = string.Empty;
+
+    public bool Actif { get; set; } = true;
+    public int Ordre { get; set; }
 }

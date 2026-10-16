@@ -5,6 +5,7 @@
 .erreur-ligne { margin-top: 10px; padding: 10px 12px; border-radius: 10px; background: #fff3f3; border: 1px solid #ffd6d6; color: #c53a3a; text-align: center; }
 body.dark .erreur-ligne { background: #3a1f24; border-color: #6c2f37; color: #ffb3b3; }
 .info-ligne { margin-top: 10px; padding: 10px 12px; border-radius: 10px; background: rgba(20, 121, 248, .06); text-align: center; }
+.actions-suivi { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .config-id { font-family: Consolas, monospace; font-size: 12px; }
 button:disabled { cursor: not-allowed; opacity: .55; }
 code { font-family: Consolas, monospace; }
@@ -23,9 +24,6 @@ body.dark { --opacite-video: .12; }
 /* Troisième carte de l'accueil : ouverture d'une configuration existante (modification / consultation). */
 .dashboard-grid { flex-wrap: wrap; }
 .dashboard-grid .action-card { flex: 1 1 300px; max-width: 460px; }
-.dashboard-grid .open-card { background: linear-gradient(135deg, #2d3a55, #5a6f93); }
-.dashboard-grid .open-card p { color: #e3eaf6; }
-.dashboard-grid .open-card .primary { color: #2d3a55; }
 
 /* Mode LOCAL (Middleware de développement sur le poste) : bleu, comme le bandeau de l'ancien outil. */
 body[data-env="local"] .topbar { border-bottom: 2px solid #1479f8; }
@@ -34,3 +32,15 @@ body[data-env="local"] .env-badge:before { background: #1479f8; }
 
 /* Correction de la maquette : en mode Test, le bouton des cartes d'action devenait violet sur violet. */
 body[data-env="test"] .action-card .primary { background: #fff; }
+
+/* Bouton « Déconnexion » de la barre du haut (lien vers /api/deconnexion). */
+.bouton-deconnexion { text-decoration: none; display: inline-flex; align-items: center; white-space: nowrap; }
+
+/* Configurateur ouvert : le portail est bloqué jusqu'à la fermeture de sa fenêtre (au-dessus des modales, sous les notifications). */
+.verrou-configurateur { position: fixed; inset: 0; z-index: 70; display: grid; place-items: center; padding: 22px; background: rgba(7, 20, 45, .62); backdrop-filter: blur(3px); }
+.verrou-boite { width: min(520px, 96vw); background: var(--card, #fff); border-radius: 20px; padding: 26px; text-align: center; box-shadow: 0 28px 80px rgba(0, 0, 0, .3); }
+.verrou-boite h2 { margin: 6px 0 4px; }
+.verrou-icone { font-size: 34px; animation: verrou-rotation 3s linear infinite; display: inline-block; }
+.verrou-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+@keyframes verrou-rotation { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .verrou-icone { animation: none; } }

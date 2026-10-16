@@ -35,7 +35,7 @@ namespace CfSaisie.Data.Migrations
 
                     b.HasIndex("ProduitId");
 
-                    b.ToTable("Accreditations");
+                    b.ToTable("Accreditations", (string)null);
                 });
 
             modelBuilder.Entity("CfSaisie.Data.AdresseClientErp", b =>
@@ -262,7 +262,7 @@ namespace CfSaisie.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("CommentaireFamilles");
+                    b.ToTable("CommentaireFamilles", (string)null);
                 });
 
             modelBuilder.Entity("CfSaisie.Data.CommentaireModele", b =>
@@ -287,7 +287,7 @@ namespace CfSaisie.Data.Migrations
 
                     b.HasIndex("FamilleId");
 
-                    b.ToTable("CommentaireModeles");
+                    b.ToTable("CommentaireModeles", (string)null);
                 });
 
             modelBuilder.Entity("CfSaisie.Data.Configurateur", b =>
@@ -315,7 +315,7 @@ namespace CfSaisie.Data.Migrations
                     b.HasIndex("Nom")
                         .IsUnique();
 
-                    b.ToTable("Configurateurs");
+                    b.ToTable("Configurateurs", (string)null);
                 });
 
             modelBuilder.Entity("CfSaisie.Data.Dossier", b =>
@@ -468,7 +468,7 @@ namespace CfSaisie.Data.Migrations
                     b.HasIndex("Reference")
                         .IsUnique();
 
-                    b.ToTable("Dossiers");
+                    b.ToTable("Dossiers", (string)null);
                 });
 
             modelBuilder.Entity("CfSaisie.Data.Famille", b =>
@@ -495,7 +495,119 @@ namespace CfSaisie.Data.Migrations
                     b.HasIndex("Nom")
                         .IsUnique();
 
-                    b.ToTable("Familles");
+                    b.ToTable("Familles", (string)null);
+                });
+
+            modelBuilder.Entity("CfSaisie.Data.JournalConnexion", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("AdresseIp")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("Compte")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Message")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Navigateur")
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
+
+                    b.Property<string>("Nom")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("ObjetId")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Resultat")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("Role")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Compte");
+
+                    b.HasIndex("Date");
+
+                    b.ToTable("JournalConnexions", (string)null);
+                });
+
+            modelBuilder.Entity("CfSaisie.Data.Langue", b =>
+                {
+                    b.Property<string>("Code")
+                        .HasMaxLength(5)
+                        .HasColumnType("nvarchar(5)");
+
+                    b.Property<bool>("Actif")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Libelle")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("Ordre")
+                        .HasColumnType("int");
+
+                    b.HasKey("Code");
+
+                    b.ToTable("Langues", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Code = "fr",
+                            Actif = true,
+                            Libelle = "Français",
+                            Ordre = 1
+                        },
+                        new
+                        {
+                            Code = "en",
+                            Actif = true,
+                            Libelle = "English",
+                            Ordre = 2
+                        },
+                        new
+                        {
+                            Code = "de",
+                            Actif = true,
+                            Libelle = "Deutsch",
+                            Ordre = 3
+                        },
+                        new
+                        {
+                            Code = "nl",
+                            Actif = true,
+                            Libelle = "Nederlands",
+                            Ordre = 4
+                        },
+                        new
+                        {
+                            Code = "pt",
+                            Actif = false,
+                            Libelle = "Português",
+                            Ordre = 5
+                        });
                 });
 
             modelBuilder.Entity("CfSaisie.Data.MessageTableauBord", b =>
@@ -523,7 +635,7 @@ namespace CfSaisie.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Messages");
+                    b.ToTable("Messages", (string)null);
                 });
 
             modelBuilder.Entity("CfSaisie.Data.ModeLivraisonErp", b =>
@@ -590,33 +702,7 @@ namespace CfSaisie.Data.Migrations
                     b.HasIndex("Nom")
                         .IsUnique();
 
-                    b.ToTable("Produits");
-                });
-
-            modelBuilder.Entity("CfSaisie.Data.Utilisateur", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Nom")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Statut")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Utilisateurs");
+                    b.ToTable("Produits", (string)null);
                 });
 
             modelBuilder.Entity("CfSaisie.Data.Accreditation", b =>

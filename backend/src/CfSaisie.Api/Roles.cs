@@ -1,8 +1,10 @@
+using System.Security.Claims;
+
 namespace CfSaisie.Api;
 
 /// <summary>
-/// Rôles simulés, transmis par l'écran dans l'en-tête X-Role en attendant l'authentification réelle.
-/// Le super administrateur n'existe que sur le poste de développement (mode Development) : il gère la table Configurateurs.
+/// Rôles du portail, attribués à la connexion selon les groupes Entra ID (voir Authentification.cs)
+/// et portés par la revendication « role » du cookie de session.
 /// </summary>
 public static class Roles
 {
@@ -10,14 +12,20 @@ public static class Roles
     public const string Administrateur = "Administrateur";
     public const string SuperAdministrateur = "SuperAdministrateur";
 
-    public static string Courant(HttpContext contexte) => contexte.Request.Headers["X-Role"].ToString();
+    /// <summary>Toute personne ayant un rôle du portail.</summary>
+    public const string PolitiquePortail = "Portail";
 
-    public static bool SuperAdministrateurDisponible(IHostEnvironment environnement) => environnement.IsDevelopment();
+    /// <summary>Écrans d'administration : administrateur ou super administrateur.</summary>
+    public const string PolitiqueAdministration = "Administration";
 
-    public static bool EstSuperAdministrateur(HttpContext contexte) =>
-        Courant(contexte) == SuperAdministrateur
-        && SuperAdministrateurDisponible(contexte.RequestServices.GetRequiredService<IHostEnvironment>());
+    /// <summary>Gestion de la table Configurateurs : super administrateur seulement.</summary>
+    public const string PolitiqueConfigurateurs = "Configurateurs";
 
-    public static bool EstAdministrateur(HttpContext contexte) =>
-        Courant(contexte) == Administrateur || EstSuperAdministrateur(contexte);
+    public static string? De(ClaimsPrincipal utilisateur) => utilisateur.FindFirst("role")?.Value;
+
+    /// <summary>Nom affiché (et enregistré comme créateur des dossiers).</summary>
+    public static string Nom(ClaimsPrincipal utilisateur) =>
+        utilisateur.FindFirst("name")?.Value ?? utilisateur.FindFirst("preferred_username")?.Value ?? "Utilisateur inconnu";
+
+    public static string? Compte(ClaimsPrincipal utilisateur) => utilisateur.FindFirst("preferred_username")?.Value;
 }

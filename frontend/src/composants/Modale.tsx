@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
+import { useApp } from '../contexte';
 
 interface Props {
   id?: string;
@@ -14,6 +15,7 @@ interface Props {
 
 /** Fenêtre modale avec le style de la maquette (.modal / .modal-box). */
 export function Modale({ id, ouverte, titre, sousTitre, largeur = 980, classeBoite, surFermer, enTete, children }: Props) {
+  const { t } = useApp();
   const style: CSSProperties = { width: `min(${largeur}px,96vw)` };
   return (
     <div id={id} className={`modal ${ouverte ? 'open' : ''}`}>
@@ -25,7 +27,7 @@ export function Modale({ id, ouverte, titre, sousTitre, largeur = 980, classeBoi
               {sousTitre && <p className="muted">{sousTitre}</p>}
               {enTete}
             </div>
-            <button className="close" onClick={surFermer} aria-label="Fermer">
+            <button className="close" onClick={surFermer} aria-label={t('Fermer')}>
               ×
             </button>
           </div>
